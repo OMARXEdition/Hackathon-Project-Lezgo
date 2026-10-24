@@ -16,12 +16,13 @@ import { EventsMap } from "@/components/map-view";
 import { AuthModal, DemoList } from "@/components/auth";
 import { inboxBadge, useInbox } from "@/components/inbox-chat";
 import { cn } from "@/lib/utils";
+import { LezgoLogo } from "@/components/logo";
 
 function Logo() {
   return (
     <Link href="/" data-testid="link-home" className="flex items-center gap-2 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-      <img src={`${import.meta.env.BASE_URL}lezgo-logo.png`} alt="" className="h-9 w-auto drop-shadow-[0_4px_10px_rgba(168,85,247,.35)] transition-transform hover:-rotate-6" />
-      <span className="font-display text-xl font-extrabold tracking-tight">Lez<span className="text-primary">go</span></span>
+      <LezgoLogo size={30} />
+      <span className="sr-only">Lezgo home</span>
     </Link>
   );
 }
@@ -29,9 +30,9 @@ function Logo() {
 function DeviceToggle() {
   const { preview, setPreview, narrowWindow, me } = useApp();
   if (narrowWindow || me?.username !== "Admin") return null;
-  const b = (on: boolean) => cn("flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition", on ? "brand-grad text-white shadow-brand" : "text-muted-foreground hover:text-foreground");
+  const b = (on: boolean) => cn("flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition", on ? "brand-grad text-white shadow-brand" : "text-muted-foreground hover:bg-white hover:text-fuchsia-700");
   return (
-    <div className="flex rounded-full bg-secondary p-1" role="group" aria-label="Preview layout">
+    <div className="flex rounded-full border border-fuchsia-200 bg-white/70 p-1" role="group" aria-label="Preview layout">
       <button data-testid="button-preview-desktop" aria-pressed={preview === "desktop"} className={b(preview === "desktop")} onClick={() => setPreview("desktop")}><Monitor className="h-3.5 w-3.5" />Desktop</button>
       <button data-testid="button-preview-mobile" aria-pressed={preview === "mobile"} className={b(preview === "mobile")} onClick={() => setPreview("mobile")}><Smartphone className="h-3.5 w-3.5" />Mobile</button>
     </div>
@@ -83,7 +84,7 @@ function MeButton() {
   return (
     <AccountMenu
       trigger={
-        <button data-testid="button-account" aria-label="Account and demo switcher" className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-3 transition hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <button data-testid="button-account" aria-label="Account and demo switcher" className="pill-pop flex items-center gap-2 rounded-full border border-teal-200 bg-white/80 py-1 pl-1 pr-3 transition hover:-translate-y-0.5 hover:border-teal-300 hover:bg-teal-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {meLoading ? <Skeleton className="h-8 w-8 rounded-full" /> : me ? <Face user={me} size={32} ring={false} /> : <span className="grid h-8 w-8 place-items-center rounded-full bg-secondary"><UserRound className="h-4 w-4" /></span>}
           <span className="text-sm font-bold">{me ? `@${me.username}` : "Guest"}</span>
           <Users className="h-3.5 w-3.5 text-muted-foreground" />
@@ -159,17 +160,17 @@ export function Shell({ children }: { children: ReactNode }) {
 
   const app = (
     <div className={cn("relative flex flex-col overflow-hidden bg-background", preview === "mobile" && !narrowWindow ? "h-full w-full" : "h-[100dvh] w-full")}>
-      <header className={cn("relative z-[1300] flex items-center justify-between gap-3 border-b border-border bg-background/90 backdrop-blur", mobile ? "h-14 px-3" : "h-16 px-5")}>
+      <header className={cn("glass rainbow-strip relative z-[1300] flex items-center justify-between gap-3 border-b border-pink-200/70 shadow-[0_8px_24px_-16px_rgba(236,72,153,.5)]", mobile ? "h-14 px-3" : "h-16 px-5")}>
         <Logo />
         <div className="flex items-center gap-2">
           {!mobile && <DeviceToggle />}
           {!mobile && (
             <>
-              <Link href="/inbox" data-testid="link-inbox" className="relative grid h-10 w-10 place-items-center rounded-full border border-border bg-card hover:shadow" aria-label={`Inbox, ${unread} unread`}>
+              <Link href="/inbox" data-testid="link-inbox" className="pill-pop relative grid h-10 w-10 place-items-center rounded-full border border-sky-200 bg-white/80 text-sky-700 transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-100" aria-label={`Inbox, ${unread} unread`}>
                 <Inbox className="h-4 w-4" />
-                {unread > 0 && <span data-testid="badge-inbox-unread" className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">{unread}</span>}
+                {unread > 0 && <span data-testid="badge-inbox-unread" className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-gradient-to-r from-pink-500 to-orange-400 px-1 text-[10px] font-bold text-accent-foreground">{unread}</span>}
               </Link>
-              <Button data-testid="button-create" onClick={goCreate} className="brand-grad shadow-brand rounded-full border-0"><Plus className="mr-1 h-4 w-4" />Host a plan</Button>
+              <Button data-testid="button-create" onClick={goCreate} className="cta-sunset rounded-full px-5 font-bold">+ Create Event</Button>
               <MeButton />
             </>
           )}
@@ -181,8 +182,8 @@ export function Shell({ children }: { children: ReactNode }) {
         {mobile ? (
           <>
             <div className="absolute inset-0"><EventsMap events={visible} selectedId={selectedId} onSelect={open} onCenter={setCenter} userLoc={userLoc} locateTick={locateTick} /></div>
-            <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] bg-gradient-to-b from-background/90 via-background/60 to-transparent p-3 pb-6">
-              <div className="pointer-events-auto"><FilterBar filters={filters} setFilters={setF} originLabel={originLabel} onLocate={locate} locating={locating} floating /></div>
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] p-3 pb-6">
+              <div className="glass rainbow-strip pointer-events-auto overflow-hidden rounded-3xl border border-white/70 p-2.5 pt-3.5 shadow-[0_12px_30px_-12px_rgba(168,85,247,.45)]"><FilterBar filters={filters} setFilters={setF} originLabel={originLabel} onLocate={locate} locating={locating} floating /></div>
             </div>
             {!q.isLoading && (
               <button onClick={() => setMView("list")} data-testid="button-count" className="absolute bottom-3 left-1/2 z-[1000] -translate-x-1/2 brand-grad rounded-full px-4 py-2 text-sm font-bold text-white shadow-brand">
@@ -202,11 +203,11 @@ export function Shell({ children }: { children: ReactNode }) {
             <section className="flex min-h-0 flex-col border-r border-border bg-sidebar">
               <div className="space-y-3 p-4 pb-3">
                 <div>
-                  <h1 className="font-display text-[28px] font-extrabold leading-none">Small plans,<br /><span className="text-primary">real neighbours.</span></h1>
+                  <h1 className="font-display text-[28px] font-extrabold leading-none">Small plans,<br /><span className="lz-word">real neighbours.</span></h1>
                   <p className="mt-2 text-sm text-muted-foreground">Kadıköy, Moda, Beşiktaş & the campuses — pick a pin, show up, meet people.</p>
                 </div>
                 <FilterBar filters={filters} setFilters={setF} originLabel={originLabel} onLocate={locate} locating={locating} />
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" data-testid="text-result-count">{q.isLoading ? "Loading plans…" : `${visible.length} of ${q.data?.length ?? 0} plans`}</p>
+                <p className="text-sm font-bold text-fuchsia-700" data-testid="text-result-count">{q.isLoading ? "Loading plans…" : `${visible.length} of ${q.data?.length ?? 0} plans`}</p>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">{list}</div>
             </section>
@@ -217,19 +218,19 @@ export function Shell({ children }: { children: ReactNode }) {
       </main>
 
       {mobile && (
-        <nav className="relative z-[1300] grid h-16 grid-cols-5 items-center border-t border-border bg-card px-1" aria-label="Main">
+        <nav className="glass relative z-[1300] grid h-16 grid-cols-5 items-center border-t border-pink-200/70 px-1" aria-label="Main">
           {[
             { k: "map", icon: MapIcon, label: "Map", on: mView === "map" && location === "/", act: () => { setMView("map"); nav("/"); } },
             { k: "list", icon: List, label: "List", on: mView === "list" && location === "/", act: () => { setMView("list"); nav("/"); } },
           ].map((t) => (
-            <button key={t.k} data-testid={`nav-${t.k}`} onClick={t.act} className={cn("flex flex-col items-center gap-0.5 text-[11px] font-bold", t.on ? "text-primary" : "text-muted-foreground")}>
+            <button key={t.k} data-testid={`nav-${t.k}`} onClick={t.act} className={cn("flex flex-col items-center gap-0.5 text-[11px] font-bold", t.on ? (t.k === "map" ? "text-teal-600" : "text-sky-600") : "text-muted-foreground")}>
               <t.icon className="h-5 w-5" />{t.label}
             </button>
           ))}
-          <button data-testid="nav-create" onClick={goCreate} aria-label="Host a plan" className="mx-auto -mt-6 grid h-14 w-14 place-items-center rounded-2xl brand-grad text-white shadow-brand rounded-full transition active:scale-90">
+          <button data-testid="nav-create" onClick={goCreate} aria-label="Create Event" className="cta-sunset mx-auto -mt-6 grid h-14 w-14 place-items-center rounded-full ring-4 ring-white">
             <Plus className="h-6 w-6" />
           </button>
-          <button data-testid="nav-inbox" onClick={() => nav("/inbox")} className={cn("relative flex flex-col items-center gap-0.5 text-[11px] font-bold", location.startsWith("/inbox") || location.startsWith("/chat") || location.startsWith("/group") ? "text-primary" : "text-muted-foreground")}>
+          <button data-testid="nav-inbox" onClick={() => nav("/inbox")} className={cn("relative flex flex-col items-center gap-0.5 text-[11px] font-bold", location.startsWith("/inbox") || location.startsWith("/chat") || location.startsWith("/group") ? "text-pink-600" : "text-muted-foreground")}>
             <Inbox className="h-5 w-5" />Inbox
             {unread > 0 && <span data-testid="badge-inbox-unread-mobile" className="absolute -top-1 right-[22%] grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[9px] text-accent-foreground">{unread}</span>}
           </button>

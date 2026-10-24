@@ -1,13 +1,13 @@
 # Lezgo — Design Specification
 
 ## Product identity
-A bold, energetic, people-first neighborhood activity map, not an enterprise directory. Lezgo uses the supplied winking purple map-pin face logo in navigation, authentication, and the browser favicon. The map and nearby activities form the primary experience; activity emoji and illustrated faces make people and plans recognizable.
+A bold, energetic, people-first neighborhood activity map, not an enterprise directory. Lezgo uses a custom winking map-pin SVG with a purple (#A855F7), coral pink (#FF5E7E), and sunny orange (#FF9F43) gradient, a white face, and an adjacent bouncy multicolor wordmark in navigation and authentication. The map and nearby activities form the primary experience; activity emoji and illustrated faces make people and plans recognizable.
 
 ## Visual system
-Use electric purple (#A855F7), purple-to-violet primary gradients, soft purple glows, pure-white cards, lavender borders, pill-shaped buttons, rounded modern typography, and visible keyboard focus. Apply the purple treatment to active filters, checkboxes, capacity progress, and primary actions. Provide clear primary, secondary, destructive, disabled, error, and empty states. Keep explanatory text readable over the map. Category controls, age badges, capacity progress, and avatar clusters communicate eligibility at a glance.
+Mix joyful category colors rather than using purple everywhere: mint teal for sports/running, sunny amber for coffee/language talks, coral rose for games/social, and sky blue for study/tech. Time and distance badges use fresh emerald. Give the navbar and floating controls translucent glass surfaces and a subtle purple/pink/orange/teal top strip. Use pill-shaped controls, rounded modern typography, visible keyboard focus, and category-themed card/modal headers. Event cards have rounded-3xl corners and a light upward bounce on hover. Create Event uses a fuchsia/pink/orange sunset gradient and glow. Capacity progress uses emerald-to-teal, and overlapping avatars alternate pink, teal, and amber rings. Respect reduced-motion preferences. Provide clear destructive, disabled, error, and empty states, and keep explanatory text readable over the map.
 
 ## Map and markers
-Default to Istanbul's Kadıköy area, with events around Moda, campuses, and Beşiktaş. Use https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png and only &copy; OpenStreetMap contributors attribution. Leaflet divIcon markers use the privacy colors specified below, large activity emoji, and a purple capacity pill or muted Full pill. Selecting a pin opens event details.
+Default to Istanbul's Kadıköy area, with events around Moda, campuses, and Beşiktaş. Use https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png and only &copy; OpenStreetMap contributors attribution. Leaflet divIcon markers use the privacy colors specified below, large activity emoji, and a gradient capacity pill or muted Full pill. Selecting a pin opens event details.
 
 ## Avatars and emoji
 DiceBear URL: https://api.dicebear.com/9.x/avataaars/svg?seed=SEED. Registration offers eight distinct seeds. Attendee avatars overlap with username and age tooltips. Quick activity options: ☕, 🏐, 🏃, 🗣️, ⚽, 🎮, 📚, 🎸, 🍕, 🧘. The full emoji-picker-react picker supplements presets.

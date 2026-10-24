@@ -101,3 +101,18 @@ export const inviteLink = (id: number | string) => `${window.location.origin}${i
 
 export const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string);
+
+/** Centralized category colour presentation (Tailwind literal classes). */
+export type CatTheme = { chip: string; bar: string; header: string; solid: string; text: string };
+const T = {
+  teal: { chip: "bg-teal-100 text-teal-800 border-teal-300", bar: "bg-gradient-to-r from-teal-300 via-teal-400 to-emerald-400", header: "bg-gradient-to-br from-teal-100 via-teal-50 to-white", solid: "bg-teal-500 text-white border-teal-500", text: "text-teal-800" },
+  amber: { chip: "bg-amber-100 text-amber-800 border-amber-300", bar: "bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400", header: "bg-gradient-to-br from-amber-100 via-amber-50 to-white", solid: "bg-amber-400 text-amber-950 border-amber-400", text: "text-amber-800" },
+  rose: { chip: "bg-rose-100 text-rose-800 border-rose-300", bar: "bg-gradient-to-r from-rose-300 via-rose-400 to-pink-400", header: "bg-gradient-to-br from-rose-100 via-rose-50 to-white", solid: "bg-rose-500 text-white border-rose-500", text: "text-rose-800" },
+  sky: { chip: "bg-sky-100 text-sky-800 border-sky-300", bar: "bg-gradient-to-r from-sky-300 via-sky-400 to-indigo-400", header: "bg-gradient-to-br from-sky-100 via-sky-50 to-white", solid: "bg-sky-500 text-white border-sky-500", text: "text-sky-800" },
+} satisfies Record<string, CatTheme>;
+export const CATEGORY_THEME: Record<EventInputCategory, CatTheme> = { sports: T.teal, running: T.teal, coffee: T.amber, games: T.rose, study: T.sky };
+export const catTheme = (id: string): CatTheme => CATEGORY_THEME[id as EventInputCategory] ?? T.amber;
+const LANG_CHIPS = ["bg-violet-100 text-violet-800 border-violet-300", "bg-pink-100 text-pink-800 border-pink-300", "bg-orange-100 text-orange-800 border-orange-300", "bg-teal-100 text-teal-800 border-teal-300", "bg-sky-100 text-sky-800 border-sky-300"];
+export const langChip = (l: string) => LANG_CHIPS[Math.max(0, LANGUAGES.indexOf(l as EventInputLanguagesItem)) % LANG_CHIPS.length];
+export const DIST_BADGE = "bg-emerald-100 text-emerald-800";
+export const RING_CYCLE = ["ring-pink-400", "ring-teal-400", "ring-amber-400"];

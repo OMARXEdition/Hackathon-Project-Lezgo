@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useApp, useRefreshEvent } from "@/lib/app-context";
-import { apiError, CATEGORIES, LANGUAGES, QUICK_EMOJIS } from "@/lib/pulse";
+import { apiError, CATEGORIES, catTheme, LANGUAGES, langChip, QUICK_EMOJIS } from "@/lib/pulse";
 import { Blank, Panel } from "@/components/bits";
 import { PickerMap } from "@/components/map-view";
 import { cn } from "@/lib/utils";
@@ -212,8 +212,8 @@ function EventForm({ initial }: { initial?: Event }) {
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((c) => (
               <button key={c.id} type="button" data-testid={`button-category-${c.id}`} onClick={() => set("category", c.id)}
-                className={cn("flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition", f.category === c.id ? "border-transparent text-[hsl(40_60%_98%)]" : "border-border bg-background")}
-                style={f.category === c.id ? { background: `hsl(${c.hue})` } : undefined}>
+                aria-pressed={f.category === c.id}
+                className={cn("pill-pop flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-[13px] font-bold transition hover:-translate-y-0.5", catTheme(c.id).chip, f.category === c.id ? "shadow-[0_0_0_2px_white,0_0_0_4px_currentColor]" : "opacity-80 hover:opacity-100")}>
                 <span>{c.emoji}</span>{c.label}
               </button>
             ))}
@@ -266,7 +266,7 @@ function EventForm({ initial }: { initial?: Event }) {
               const on = languages.includes(l);
               return (
                 <button key={l} type="button" data-testid={`button-language-${l}`} aria-pressed={on} onClick={() => setLanguages(on ? languages.filter((x) => x !== l) : [...languages, l])}
-                  className={cn("rounded-full border px-3 py-1.5 text-[13px] font-semibold transition", on ? "brand-grad border-purple-400 text-white shadow-brand" : "border-border bg-background")}>
+                  className={cn("rounded-full border px-3 py-1.5 text-[13px] font-semibold transition", on ? cn(langChip(l), "border-2 shadow-[0_0_0_2px_white,0_0_0_4px_currentColor]") : "border-border bg-background hover:bg-pink-50")}>
                   {l}
                 </button>
               );

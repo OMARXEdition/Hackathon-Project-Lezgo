@@ -16,6 +16,7 @@ import { useApp, type AuthTab } from "@/lib/app-context";
 import { apiError, AVATAR_SEEDS } from "@/lib/pulse";
 import { Face } from "@/components/bits";
 import { cn } from "@/lib/utils";
+import { LezgoLogo } from "@/components/logo";
 
 const input = "h-11 w-full rounded-full px-4 border border-input bg-background px-3 text-[15px] outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/30";
 
@@ -102,16 +103,16 @@ export function AuthModal() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", damping: 28, stiffness: 320 }}
         onClick={(e) => e.stopPropagation()}
-        className={cn("relative max-h-[92%] w-full max-w-[420px] overflow-y-auto bg-card p-6 shadow-2xl", mobile ? "rounded-t-[28px]" : "rounded-[28px]")}
+        className={cn("rainbow-strip relative max-h-[92%] w-full max-w-[420px] overflow-y-auto bg-card p-6 shadow-2xl", mobile ? "rounded-t-[28px]" : "rounded-[28px]")}
       >
         <button aria-label="Close" data-testid="button-close-auth" onClick={closeAuth} className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-secondary"><X className="h-4 w-4" /></button>
-        <img src={`${import.meta.env.BASE_URL}lezgo-logo.png`} alt="Lezgo" className="mb-3 h-14 w-auto drop-shadow-[0_4px_12px_rgba(168,85,247,.4)]" />
+        <div className="mb-3" aria-label="Lezgo"><LezgoLogo size={44} /></div>
         <h2 className="font-display text-2xl font-extrabold">{tab === "register" ? "Make your face" : tab === "demo" ? "Try a demo neighbour" : "Hey again"}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{auth.reason ?? "No email. No phone. Just a username, your age and a face."}</p>
 
-        <div className="mt-4 grid grid-cols-3 gap-1 rounded-full bg-secondary p-1">
+        <div className="mt-4 grid grid-cols-3 gap-1 rounded-full border border-pink-100 bg-gradient-to-r from-violet-50 via-pink-50 to-orange-50 p-1">
           {(["login", "register", "demo"] as AuthTab[]).map((t) => (
-            <button key={t} data-testid={`tab-${t}`} onClick={() => setTab(t)} className={cn("rounded-full py-2 text-sm font-bold transition", tab === t ? "brand-grad text-white shadow-brand" : "text-muted-foreground")}>
+            <button key={t} data-testid={`tab-${t}`} onClick={() => setTab(t)} className={cn("rounded-full py-2 text-sm font-bold transition", tab === t ? "brand-grad text-white shadow-brand" : "text-muted-foreground hover:bg-white hover:text-pink-600")}>
               {t === "login" ? "Sign in" : t === "register" ? "Join" : "Demo"}
             </button>
           ))}
@@ -130,7 +131,7 @@ export function AuthModal() {
                 <div className="grid grid-cols-4 gap-2">
                   {AVATAR_SEEDS.map((s) => (
                     <button type="button" key={s} data-testid={`button-avatar-${s}`} onClick={() => setSeed(s)} aria-pressed={seed === s}
-                      className={cn("rounded-2xl p-1 transition active:scale-95", seed === s ? "bg-primary/15 shadow-[0_0_0_2px_hsl(var(--primary))]" : "hover:bg-muted")}>
+                      className={cn("rounded-2xl p-1 transition active:scale-95", seed === s ? "bg-pink-100 shadow-[0_0_0_2px_#ec4899]" : "hover:bg-amber-50")}>
                       <Face user={{ avatarSeed: s, username: s }} size={64} ring={false} className="mx-auto h-auto w-full" />
                     </button>
                   ))}
@@ -146,7 +147,7 @@ export function AuthModal() {
               </>
             )}
             {err && <Err>{err}</Err>}
-            <Button data-testid="button-auth-submit" type="submit" className="brand-grad shadow-brand h-12 w-full rounded-full border-0 text-base" disabled={pending}>
+            <Button data-testid="button-auth-submit" type="submit" className="cta-sunset h-12 w-full rounded-full text-base font-bold" disabled={pending}>
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{tab === "login" ? "Sign in" : "Create my profile"}
             </Button>
           </form>

@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useApp, useRefreshEvent } from "@/lib/app-context";
-import { apiError, catOf, fitsAge, formatPrice, formatWhen, inviteLink, isAttending, needsApproval, spotsLeft } from "@/lib/pulse";
+import { apiError, catOf, catTheme, fitsAge, formatPrice, formatWhen, inviteLink, isAttending, needsApproval, spotsLeft } from "@/lib/pulse";
 import { AgeBadge, Blank, CapacityBar, Face, FaceStack, Panel } from "@/components/bits";
 import { EventTags, PrivacySwitch } from "@/components/event-bits";
 import { cn } from "@/lib/utils";
@@ -104,7 +104,7 @@ function CancelModal({ eventId, title, onClose }: { eventId: number; title: stri
   const t = reason.trim();
   return (
     <div className="absolute inset-0 z-[2000] grid place-items-center bg-[hsl(222_45%_10%/.5)] p-4" onClick={onClose} data-testid="modal-cancel">
-      <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={(e) => e.stopPropagation()} className="w-full max-w-[400px] rounded-[28px] bg-card p-6 shadow-2xl">
+      <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={(e) => e.stopPropagation()} className="rainbow-strip w-full max-w-[400px] overflow-hidden rounded-[28px] bg-card p-6 shadow-2xl">
         <h2 className="font-display text-xl font-extrabold">Why are you canceling this event?</h2>
         <p className="mt-1 text-sm text-muted-foreground">“{title}” — your reason goes to every attendee's inbox and the group chat. This can't be undone.</p>
         <textarea data-testid="input-cancel-reason" autoFocus rows={4} maxLength={2000} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Rain is forecast all evening — let's reschedule." className="mt-3 w-full resize-none rounded-xl border border-input bg-background px-3 py-2 text-[15px] outline-none focus:border-primary" />
@@ -166,6 +166,7 @@ export function EventDetails({ id }: { id: number }) {
     );
 
   const c = catOf(event.category);
+  const th = catTheme(event.category);
   const mine = me?.id === event.host.id;
   const going = isAttending(event, me);
   const member = mine || going;
@@ -188,7 +189,7 @@ export function EventDetails({ id }: { id: number }) {
     }
   };
 
-  const big = "h-12 w-full rounded-full text-base";
+  const big = "h-12 w-full rounded-full text-base font-bold";
   let action;
   if (canceled) action = <p className="text-center text-sm font-semibold text-destructive" data-testid="text-canceled-locked">This plan was canceled — joining is closed.</p>;
   else if (mine) action = <p className="text-center text-sm text-muted-foreground" data-testid="text-host-note">You're hosting — hosts count toward capacity and can't leave their own plan.</p>;
@@ -212,7 +213,7 @@ export function EventDetails({ id }: { id: number }) {
     );
   else
     action = (
-      <Button data-testid="button-join" className={big} disabled={busy} onClick={() => join.mutate({ id: event.id })}>
+      <Button data-testid="button-join" className={cn(big, "cta-sunset")} disabled={busy} onClick={() => join.mutate({ id: event.id })}>
         {join.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Join this plan
       </Button>
     );
@@ -223,7 +224,7 @@ export function EventDetails({ id }: { id: number }) {
     <Panel
       testId="panel-event"
       onClose={close}
-      title={<span className="text-sm font-semibold uppercase tracking-wider" style={{ color: `hsl(${c.hue})` }}>{c.emoji} {c.label}</span>}
+      title={<span className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-bold", th.chip)}>{c.emoji} {c.label}</span>}
       footer={
         <div className="space-y-2">
           {err && <p role="alert" data-testid="text-join-error" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">{err}</p>}
@@ -237,12 +238,13 @@ export function EventDetails({ id }: { id: number }) {
           <p className="mt-1 whitespace-pre-wrap text-sm" data-testid="text-cancellation-reason">“{event.cancellationReason}”</p>
         </div>
       )}
-      <div className={cn("relative overflow-hidden rounded-3xl p-5", canceled && "opacity-70")} style={{ background: `linear-gradient(140deg, hsl(${c.hue} / .18), hsl(${c.hue} / .05))` }}>
+      <div className={cn("relative overflow-hidden rounded-3xl border p-5 pt-6", th.header, th.chip.split(" ").find((x) => x.startsWith("border-")), canceled && "opacity-70")}>
+        <div aria-hidden className={cn("absolute inset-x-0 top-0 h-2", th.bar)} />
         <div className="absolute -right-3 -top-4 select-none text-[96px] leading-none opacity-90">{event.emoji}</div>
         <h2 className={cn("relative max-w-[78%] font-display text-2xl font-extrabold leading-tight", canceled && "line-through")} data-testid="text-event-title">{event.title}</h2>
         <div className="relative mt-3 space-y-1.5 text-sm">
-          <p className="flex items-center gap-2 font-semibold"><CalendarClock className="h-4 w-4" />{formatWhen(event.startsAt)}</p>
-          <p className="flex items-center gap-2"><MapPin className="h-4 w-4" />{event.locationName}</p>
+          <p className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 font-bold text-emerald-800"><CalendarClock className="h-4 w-4" />{formatWhen(event.startsAt)}</p>
+          <p className="flex items-center gap-2 font-semibold"><MapPin className={cn("h-4 w-4", th.text)} />{event.locationName}</p>
         </div>
       </div>
 
@@ -277,14 +279,14 @@ export function EventDetails({ id }: { id: number }) {
       )}
 
       {member && (
-        <Button data-testid="button-open-group" variant="secondary" className="mt-4 h-11 w-full rounded-full" onClick={() => nav(`/group/${event.id}`)}>
+        <Button data-testid="button-open-group" variant="secondary" className="mt-4 h-11 w-full rounded-full border-0 bg-gradient-to-r from-teal-400 to-sky-500 font-bold text-white hover:brightness-105" onClick={() => nav(`/group/${event.id}`)}>
           <MessagesSquare className="mr-2 h-4 w-4" />Open group chat{canceled ? " (read-only)" : ""}
         </Button>
       )}
 
-      <div className="mt-5 space-y-3 rounded-3xl border border-border p-4">
+      <div className="mt-5 space-y-3 rounded-3xl border border-teal-200 bg-gradient-to-br from-teal-50/80 to-white p-4">
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-2 text-sm font-bold"><Users className="h-4 w-4" />Who's going</span>
+          <span className="flex items-center gap-2 text-sm font-bold"><Users className="h-4 w-4 text-teal-600" />Who's going</span>
           <AgeBadge event={event} fits={ageOk} />
         </div>
         <CapacityBar event={event} />
@@ -293,14 +295,14 @@ export function EventDetails({ id }: { id: number }) {
         {!me && <p className="text-xs text-muted-foreground">Adults 18+ · ages are self-reported.</p>}
       </div>
 
-      <div className="mt-4 flex items-center gap-3 rounded-3xl border border-border p-3">
+      <div className="mt-4 flex items-center gap-3 rounded-3xl border border-amber-200 bg-amber-50/60 p-3">
         <Face user={event.host} size={44} ring={false} />
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1 text-xs text-muted-foreground"><Crown className="h-3 w-3" />Host</p>
+          <p className="flex items-center gap-1 text-xs text-muted-foreground"><Crown className="h-3 w-3 text-amber-500" />Host</p>
           <p className="truncate font-bold" data-testid="text-host">@{event.host.username} · {event.host.age}</p>
         </div>
         {!mine && event.allowMessages && (
-          <Button data-testid="button-message-host" variant="secondary" className="rounded-full" onClick={() => requireAuth("Sign in to message the host.") && nav(`/chat/${event.id}/${event.host.id}`)}>
+          <Button data-testid="button-message-host" variant="secondary" className="rounded-full border border-pink-200 bg-pink-100 text-pink-700 hover:bg-pink-200" onClick={() => requireAuth("Sign in to message the host.") && nav(`/chat/${event.id}/${event.host.id}`)}>
             <MessageCircle className="mr-1.5 h-4 w-4" />Message
           </Button>
         )}
@@ -310,8 +312,8 @@ export function EventDetails({ id }: { id: number }) {
       {mine && (
         <div className="mt-3 space-y-3">
           <div className="grid grid-cols-2 gap-2">
-            <Button data-testid="button-copy-invite" variant="outline" className="rounded-full" onClick={copyInvite}><Copy className="mr-1.5 h-4 w-4" />Copy Invite Link</Button>
-            <Button data-testid="button-edit-event" variant="outline" className="rounded-full" disabled={canceled} onClick={() => nav(`/edit/${event.id}`)}><Pencil className="mr-1.5 h-4 w-4" />Edit</Button>
+            <Button data-testid="button-copy-invite" variant="outline" className="rounded-full border-sky-300 text-sky-700 hover:bg-sky-50" onClick={copyInvite}><Copy className="mr-1.5 h-4 w-4" />Copy Invite Link</Button>
+            <Button data-testid="button-edit-event" variant="outline" className="rounded-full border-amber-300 text-amber-800 hover:bg-amber-50" disabled={canceled} onClick={() => nav(`/edit/${event.id}`)}><Pencil className="mr-1.5 h-4 w-4" />Edit</Button>
           </div>
           {!canceled && <PrivacySwitch event={event} />}
           {!canceled && <PendingRequests eventId={event.id} />}

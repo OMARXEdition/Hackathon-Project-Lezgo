@@ -241,7 +241,7 @@ export function GroupChatPanel({ eventId }: { eventId: number }) {
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); } }}
                 placeholder="Message everyone going…"
                 className="max-h-28 min-h-11 flex-1 resize-none rounded-2xl border border-input bg-background px-3 py-2.5 text-[15px] outline-none focus:border-primary" />
-              <Button data-testid="button-group-send" type="submit" size="icon" className="h-11 w-11 rounded-full" disabled={!text.trim() || send.isPending} aria-label="Send">
+              <Button data-testid="button-group-send" type="submit" size="icon" className="h-11 w-11 rounded-full cta-sunset" disabled={!text.trim() || send.isPending} aria-label="Send">
                 <SendHorizonal className="h-4 w-4" />
               </Button>
             </form>
@@ -370,7 +370,7 @@ export function ChatPanel({ eventId, userId }: { eventId: number; userId: number
                 placeholder="Say hi, ask what to bring…"
                 className="max-h-28 min-h-11 flex-1 resize-none rounded-2xl border border-input bg-background px-3 py-2.5 text-[15px] outline-none focus:border-primary"
               />
-              <Button data-testid="button-send" type="submit" size="icon" className="h-11 w-11 rounded-full" disabled={!text.trim() || send.isPending} aria-label="Send">
+              <Button data-testid="button-send" type="submit" size="icon" className="h-11 w-11 rounded-full cta-sunset" disabled={!text.trim() || send.isPending} aria-label="Send">
                 <SendHorizonal className="h-4 w-4" />
               </Button>
             </form>
