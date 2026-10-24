@@ -61,10 +61,10 @@ export function RequestCard({ r, showEvent }: { r: JoinRequest; showEvent?: bool
       )}
       {r.status === "pending" ? (
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <Button data-testid={`button-accept-${r.id}`} disabled={busy} className="rounded-xl" onClick={() => decide.mutate({ id: r.eventId, requestId: r.id, data: { decision: "accept" } })}>
+          <Button data-testid={`button-accept-${r.id}`} disabled={busy} className="rounded-full" onClick={() => decide.mutate({ id: r.eventId, requestId: r.id, data: { decision: "accept" } })}>
             {busy && decide.variables?.data.decision === "accept" ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}Accept
           </Button>
-          <Button data-testid={`button-decline-${r.id}`} disabled={busy} variant="outline" className="rounded-xl" onClick={() => decide.mutate({ id: r.eventId, requestId: r.id, data: { decision: "decline" } })}>
+          <Button data-testid={`button-decline-${r.id}`} disabled={busy} variant="outline" className="rounded-full" onClick={() => decide.mutate({ id: r.eventId, requestId: r.id, data: { decision: "decline" } })}>
             <X className="mr-1 h-4 w-4" />Decline
           </Button>
         </div>
@@ -110,8 +110,8 @@ function CancelModal({ eventId, title, onClose }: { eventId: number; title: stri
         <textarea data-testid="input-cancel-reason" autoFocus rows={4} maxLength={2000} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Rain is forecast all evening — let's reschedule." className="mt-3 w-full resize-none rounded-xl border border-input bg-background px-3 py-2 text-[15px] outline-none focus:border-primary" />
         {err && <p role="alert" className="mt-2 text-sm font-medium text-destructive">{err}</p>}
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <Button variant="outline" className="rounded-xl" onClick={onClose} data-testid="button-cancel-keep">Keep plan</Button>
-          <Button variant="destructive" className="rounded-xl" disabled={!t || cancel.isPending} data-testid="button-cancel-confirm" onClick={() => cancel.mutate({ id: eventId, data: { reason: t } })}>
+          <Button variant="outline" className="rounded-full" onClick={onClose} data-testid="button-cancel-keep">Keep plan</Button>
+          <Button variant="destructive" className="rounded-full" disabled={!t || cancel.isPending} data-testid="button-cancel-confirm" onClick={() => cancel.mutate({ id: eventId, data: { reason: t } })}>
             {cancel.isPending && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}Cancel event
           </Button>
         </div>
@@ -188,7 +188,7 @@ export function EventDetails({ id }: { id: number }) {
     }
   };
 
-  const big = "h-12 w-full rounded-2xl text-base";
+  const big = "h-12 w-full rounded-full text-base";
   let action;
   if (canceled) action = <p className="text-center text-sm font-semibold text-destructive" data-testid="text-canceled-locked">This plan was canceled — joining is closed.</p>;
   else if (mine) action = <p className="text-center text-sm text-muted-foreground" data-testid="text-host-note">You're hosting — hosts count toward capacity and can't leave their own plan.</p>;
@@ -277,7 +277,7 @@ export function EventDetails({ id }: { id: number }) {
       )}
 
       {member && (
-        <Button data-testid="button-open-group" variant="secondary" className="mt-4 h-11 w-full rounded-2xl" onClick={() => nav(`/group/${event.id}`)}>
+        <Button data-testid="button-open-group" variant="secondary" className="mt-4 h-11 w-full rounded-full" onClick={() => nav(`/group/${event.id}`)}>
           <MessagesSquare className="mr-2 h-4 w-4" />Open group chat{canceled ? " (read-only)" : ""}
         </Button>
       )}
@@ -310,13 +310,13 @@ export function EventDetails({ id }: { id: number }) {
       {mine && (
         <div className="mt-3 space-y-3">
           <div className="grid grid-cols-2 gap-2">
-            <Button data-testid="button-copy-invite" variant="outline" className="rounded-2xl" onClick={copyInvite}><Copy className="mr-1.5 h-4 w-4" />Copy Invite Link</Button>
-            <Button data-testid="button-edit-event" variant="outline" className="rounded-2xl" disabled={canceled} onClick={() => nav(`/edit/${event.id}`)}><Pencil className="mr-1.5 h-4 w-4" />Edit</Button>
+            <Button data-testid="button-copy-invite" variant="outline" className="rounded-full" onClick={copyInvite}><Copy className="mr-1.5 h-4 w-4" />Copy Invite Link</Button>
+            <Button data-testid="button-edit-event" variant="outline" className="rounded-full" disabled={canceled} onClick={() => nav(`/edit/${event.id}`)}><Pencil className="mr-1.5 h-4 w-4" />Edit</Button>
           </div>
           {!canceled && <PrivacySwitch event={event} />}
           {!canceled && <PendingRequests eventId={event.id} />}
           {!canceled && (
-            <Button data-testid="button-cancel-event" variant="ghost" className="w-full rounded-2xl text-destructive hover:bg-destructive/10" onClick={() => setShowCancel(true)}>
+            <Button data-testid="button-cancel-event" variant="ghost" className="w-full rounded-full text-destructive hover:bg-destructive/10" onClick={() => setShowCancel(true)}>
               <Ban className="mr-1.5 h-4 w-4" />Cancel Event
             </Button>
           )}

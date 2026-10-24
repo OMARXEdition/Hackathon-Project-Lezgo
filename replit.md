@@ -52,6 +52,8 @@ Lezgo adds paid/private event admission, screening and approval, shareable invit
 - Use standard free OpenStreetMap tiles (`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`) with only `&copy; OpenStreetMap contributors` attribution, DiceBear avatars, and activity emoji with a full emoji picker.
 - No email address or phone number in account creation.
 - Pin backgrounds represent privacy only: public white, private glowing purple. Only the top-right `$` badge represents paid status.
+- Use the supplied winking purple map-pin face logo, electric-purple/violet actions and glows, white surfaces, lavender borders, pill controls, and rounded typography.
+- Show the Mobile/Desktop view switcher only to the signed-in user whose username is exactly `Admin`; guests and regular users keep natural responsive layouts.
 
 ## Gotchas
 

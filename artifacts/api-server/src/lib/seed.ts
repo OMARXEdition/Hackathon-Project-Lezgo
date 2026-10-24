@@ -1,13 +1,27 @@
 import { randomBytes } from "node:crypto";
 import { db, usersTable, eventsTable, attendeesTable, messagesTable, groupMessagesTable, requestsTable, notificationsTable } from "@workspace/db";
 import { and, eq, sql } from "drizzle-orm";
-import { hashPassword } from "./auth";
+import { hashPassword, verifyPassword } from "./auth";
 import { logger } from "./logger";
 
 export async function seedDemo() {
   // One advisory lock prevents duplicate seed data if two instances start together.
   await db.transaction(async tx => {
     await tx.execute(sql`select pg_advisory_xact_lock(7826301)`);
+    // This reserved judging account must also exist when demo data was seeded earlier.
+    const [admin] = await tx.select().from(usersTable).where(eq(usersTable.username, "Admin"));
+    const adminPasswordValid = admin ? await verifyPassword("hackathon", admin.passwordHash) : false;
+    if (!admin) {
+      await tx.insert(usersTable).values({
+        username: "Admin", passwordHash: await hashPassword("hackathon"),
+        age: 25, avatarSeed: "Admin", isDemo: false,
+      });
+    } else if (!adminPasswordValid || admin.isDemo) {
+      await tx.update(usersTable).set({
+        passwordHash: adminPasswordValid ? admin.passwordHash : await hashPassword("hackathon"),
+        isDemo: false,
+      }).where(eq(usersTable.id, admin.id));
+    }
     const existing = await tx.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.isDemo, true)).limit(1);
     if (existing.length) return;
     const demoDefinitions = [

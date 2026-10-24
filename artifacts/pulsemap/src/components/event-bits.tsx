@@ -150,7 +150,7 @@ function CheckDropdown<T extends string>({ label, testId, options, value, onChan
 const chipCls = (on: boolean) =>
   cn(
     "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-    on ? "border-foreground bg-foreground text-background" : "border-border bg-card hover:border-foreground/40",
+    on ? "brand-grad border-purple-400 text-white shadow-brand" : "border-border bg-card hover:border-purple-300",
   );
 
 export function FilterBar({ filters, setFilters, floating, originLabel, onLocate, locating }: { filters: Filters; setFilters: (f: Filters) => void; floating?: boolean; originLabel?: string; onLocate?: () => void; locating?: boolean }) {

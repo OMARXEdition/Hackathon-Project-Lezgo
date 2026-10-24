@@ -20,18 +20,16 @@ import { cn } from "@/lib/utils";
 function Logo() {
   return (
     <Link href="/" data-testid="link-home" className="flex items-center gap-2 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-      <span className="relative grid h-9 w-9 place-items-center rounded-[12px] bg-primary">
-        <svg viewBox="0 0 64 64" className="h-8 w-8" aria-hidden><path d="M32 6c-10.5 0-19 8.2-19 18.4C13 38 32 58 32 58s19-20 19-33.6C51 14.2 42.5 6 32 6z" fill="hsl(var(--accent))" /><path d="M35.5 13 23 30h8l-3.5 15L41 26h-8l2.5-13z" fill="#FFF8EC" /></svg>
-      </span>
-      <span className="font-display text-xl font-extrabold italic tracking-tight">Lez<span className="text-accent">go</span></span>
+      <img src={`${import.meta.env.BASE_URL}lezgo-logo.png`} alt="" className="h-9 w-auto drop-shadow-[0_4px_10px_rgba(168,85,247,.35)] transition-transform hover:-rotate-6" />
+      <span className="font-display text-xl font-extrabold tracking-tight">Lez<span className="text-primary">go</span></span>
     </Link>
   );
 }
 
 function DeviceToggle() {
-  const { preview, setPreview, narrowWindow } = useApp();
-  if (narrowWindow) return null;
-  const b = (on: boolean) => cn("flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition", on ? "bg-card text-foreground shadow" : "text-muted-foreground hover:text-foreground");
+  const { preview, setPreview, narrowWindow, me } = useApp();
+  if (narrowWindow || me?.username !== "Admin") return null;
+  const b = (on: boolean) => cn("flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition", on ? "brand-grad text-white shadow-brand" : "text-muted-foreground hover:text-foreground");
   return (
     <div className="flex rounded-full bg-secondary p-1" role="group" aria-label="Preview layout">
       <button data-testid="button-preview-desktop" aria-pressed={preview === "desktop"} className={b(preview === "desktop")} onClick={() => setPreview("desktop")}><Monitor className="h-3.5 w-3.5" />Desktop</button>
@@ -41,13 +39,15 @@ function DeviceToggle() {
 }
 
 function AccountMenu({ trigger }: { trigger: ReactNode }) {
-  const { me, openAuth, onIdentityChange } = useApp();
+  const { me, openAuth, onIdentityChange, auth } = useApp();
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => { setMenuOpen(false); }, [auth, me?.id]);
   const { toast } = useToast();
   const logout = useLogout({ mutation: { onSuccess: () => { onIdentityChange(); toast({ title: "Signed out", description: "You're browsing as a guest." }); }, onError: (e) => toast({ title: "Couldn't sign out", description: apiError(e), variant: "destructive" }) } });
   return (
-    <DropdownMenu>
+    <DropdownMenu open={menuOpen && !auth} onOpenChange={setMenuOpen}>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="z-[3000] w-72 rounded-2xl p-3">
+      <DropdownMenuContent align="end" className="z-[3000] w-72 rounded-2xl p-3" onCloseAutoFocus={(e) => { if (auth) e.preventDefault(); }}>
         {me ? (
           <div className="flex items-center gap-3 pb-2">
             <Face user={me} size={44} ring={false} />
@@ -169,7 +169,7 @@ export function Shell({ children }: { children: ReactNode }) {
                 <Inbox className="h-4 w-4" />
                 {unread > 0 && <span data-testid="badge-inbox-unread" className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">{unread}</span>}
               </Link>
-              <Button data-testid="button-create" onClick={goCreate} className="rounded-full"><Plus className="mr-1 h-4 w-4" />Host a plan</Button>
+              <Button data-testid="button-create" onClick={goCreate} className="brand-grad shadow-brand rounded-full border-0"><Plus className="mr-1 h-4 w-4" />Host a plan</Button>
               <MeButton />
             </>
           )}
@@ -185,7 +185,7 @@ export function Shell({ children }: { children: ReactNode }) {
               <div className="pointer-events-auto"><FilterBar filters={filters} setFilters={setF} originLabel={originLabel} onLocate={locate} locating={locating} floating /></div>
             </div>
             {!q.isLoading && (
-              <button onClick={() => setMView("list")} data-testid="button-count" className="absolute bottom-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full bg-foreground px-4 py-2 text-sm font-bold text-background shadow-lg">
+              <button onClick={() => setMView("list")} data-testid="button-count" className="absolute bottom-3 left-1/2 z-[1000] -translate-x-1/2 brand-grad rounded-full px-4 py-2 text-sm font-bold text-white shadow-brand">
                 {visible.length} {visible.length === 1 ? "plan" : "plans"} nearby
               </button>
             )}
@@ -226,7 +226,7 @@ export function Shell({ children }: { children: ReactNode }) {
               <t.icon className="h-5 w-5" />{t.label}
             </button>
           ))}
-          <button data-testid="nav-create" onClick={goCreate} aria-label="Host a plan" className="mx-auto -mt-6 grid h-14 w-14 place-items-center rounded-2xl bg-accent text-accent-foreground shadow-[0_12px_24px_-8px_hsl(14_80%_40%/.6)] transition active:scale-90">
+          <button data-testid="nav-create" onClick={goCreate} aria-label="Host a plan" className="mx-auto -mt-6 grid h-14 w-14 place-items-center rounded-2xl brand-grad text-white shadow-brand rounded-full transition active:scale-90">
             <Plus className="h-6 w-6" />
           </button>
           <button data-testid="nav-inbox" onClick={() => nav("/inbox")} className={cn("relative flex flex-col items-center gap-0.5 text-[11px] font-bold", location.startsWith("/inbox") || location.startsWith("/chat") || location.startsWith("/group") ? "text-primary" : "text-muted-foreground")}>
@@ -249,7 +249,7 @@ export function Shell({ children }: { children: ReactNode }) {
   if (preview === "mobile" && !narrowWindow) {
     return (
       <div className="tile-bg flex min-h-[100dvh] w-full flex-col items-center justify-center gap-4 bg-secondary py-6">
-        <div className="relative h-[min(844px,calc(100dvh-48px))] w-[390px] overflow-hidden rounded-[44px] border-[10px] border-foreground shadow-[0_40px_80px_-30px_hsl(222_45%_16%/.6)]" data-testid="frame-mobile">
+        <div className="relative h-[min(844px,calc(100dvh-48px))] w-[390px] overflow-hidden rounded-[44px] border-[10px] border-[#3b0764] shadow-brand" data-testid="frame-mobile">
           {app}
         </div>
       </div>

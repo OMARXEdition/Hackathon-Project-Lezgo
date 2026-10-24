@@ -168,7 +168,7 @@ function EventForm({ initial }: { initial?: Event }) {
       footer={
         <div className="space-y-2">
           {serverErr && <p role="alert" data-testid="text-create-error" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">{serverErr}</p>}
-          <Button data-testid="button-submit-event" className="h-12 w-full rounded-2xl text-base" disabled={pending} onClick={submit}>
+          <Button data-testid="button-submit-event" className="h-12 w-full rounded-full text-base" disabled={pending} onClick={submit}>
             {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{editing ? "Save changes" : "Put it on the map"}
           </Button>
         </div>
@@ -266,7 +266,7 @@ function EventForm({ initial }: { initial?: Event }) {
               const on = languages.includes(l);
               return (
                 <button key={l} type="button" data-testid={`button-language-${l}`} aria-pressed={on} onClick={() => setLanguages(on ? languages.filter((x) => x !== l) : [...languages, l])}
-                  className={cn("rounded-full border px-3 py-1.5 text-[13px] font-semibold transition", on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background")}>
+                  className={cn("rounded-full border px-3 py-1.5 text-[13px] font-semibold transition", on ? "brand-grad border-purple-400 text-white shadow-brand" : "border-border bg-background")}>
                   {l}
                 </button>
               );

@@ -56,6 +56,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const meQ = useGetMe({ query: { queryKey: getGetMeQueryKey(), refetchInterval: 30000 } });
   const me = meQ.data?.user ?? null;
+  const isAdmin = me?.username === "Admin";
+  useEffect(() => { if (!isAdmin) setPreview("desktop"); }, [isAdmin]);
 
   const openAuth = useCallback((tab: AuthTab = "login", reason?: string) => setAuth({ tab, reason }), []);
   const closeAuth = useCallback(() => setAuth(null), []);

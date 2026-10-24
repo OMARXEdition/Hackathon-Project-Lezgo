@@ -14,7 +14,7 @@ export function Face({ user, size = 36, ring = true, className }: { user: Pick<U
       alt={user.username}
       width={size}
       height={size}
-      className={cn("rounded-full bg-[hsl(38_70%_88%)] object-cover", ring && "ring-2 ring-card", className)}
+      className={cn("rounded-full bg-[#f3e8ff] object-cover", ring && "ring-2 ring-card", className)}
       style={{ width: size, height: size }}
     />
   );
@@ -74,10 +74,10 @@ export function CapacityBar({ event }: { event: Event }) {
           className="h-full rounded-full"
           initial={false}
           animate={{ width: `${pct}%` }}
-          style={{ background: left === 0 ? "hsl(222 10% 60%)" : "hsl(150 62% 38%)" }}
+          style={{ background: left === 0 ? "hsl(268 15% 70%)" : "linear-gradient(90deg,#A855F7,#8B5CF6)" }}
         />
       </div>
-      <span className={cn("whitespace-nowrap text-xs font-bold", left === 0 ? "text-muted-foreground" : "text-[hsl(150_62%_30%)]")}>
+      <span className={cn("whitespace-nowrap text-xs font-bold", left === 0 ? "text-muted-foreground" : "text-[#7e22ce]")}>
         {left === 0 ? "Full" : `${event.joinedCount}/${event.maxPeople} · ${left} left`}
       </span>
     </div>

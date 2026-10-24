@@ -17,7 +17,7 @@ import { apiError, AVATAR_SEEDS } from "@/lib/pulse";
 import { Face } from "@/components/bits";
 import { cn } from "@/lib/utils";
 
-const input = "h-11 w-full rounded-xl border border-input bg-background px-3 text-[15px] outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/30";
+const input = "h-11 w-full rounded-full px-4 border border-input bg-background px-3 text-[15px] outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/30";
 
 export function useDemoSwitch() {
   const { onIdentityChange, closeAuth } = useApp();
@@ -105,12 +105,13 @@ export function AuthModal() {
         className={cn("relative max-h-[92%] w-full max-w-[420px] overflow-y-auto bg-card p-6 shadow-2xl", mobile ? "rounded-t-[28px]" : "rounded-[28px]")}
       >
         <button aria-label="Close" data-testid="button-close-auth" onClick={closeAuth} className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-secondary"><X className="h-4 w-4" /></button>
+        <img src={`${import.meta.env.BASE_URL}lezgo-logo.png`} alt="Lezgo" className="mb-3 h-14 w-auto drop-shadow-[0_4px_12px_rgba(168,85,247,.4)]" />
         <h2 className="font-display text-2xl font-extrabold">{tab === "register" ? "Make your face" : tab === "demo" ? "Try a demo neighbour" : "Hey again"}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{auth.reason ?? "No email. No phone. Just a username, your age and a face."}</p>
 
-        <div className="mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-secondary p-1">
+        <div className="mt-4 grid grid-cols-3 gap-1 rounded-full bg-secondary p-1">
           {(["login", "register", "demo"] as AuthTab[]).map((t) => (
-            <button key={t} data-testid={`tab-${t}`} onClick={() => setTab(t)} className={cn("rounded-xl py-2 text-sm font-bold transition", tab === t ? "bg-card shadow" : "text-muted-foreground")}>
+            <button key={t} data-testid={`tab-${t}`} onClick={() => setTab(t)} className={cn("rounded-full py-2 text-sm font-bold transition", tab === t ? "brand-grad text-white shadow-brand" : "text-muted-foreground")}>
               {t === "login" ? "Sign in" : t === "register" ? "Join" : "Demo"}
             </button>
           ))}
@@ -145,7 +146,7 @@ export function AuthModal() {
               </>
             )}
             {err && <Err>{err}</Err>}
-            <Button data-testid="button-auth-submit" type="submit" className="h-12 w-full rounded-2xl text-base" disabled={pending}>
+            <Button data-testid="button-auth-submit" type="submit" className="brand-grad shadow-brand h-12 w-full rounded-full border-0 text-base" disabled={pending}>
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{tab === "login" ? "Sign in" : "Create my profile"}
             </Button>
           </form>

@@ -26,6 +26,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   const parsed = RegisterBody.safeParse(req.body);
   if (!parsed.success) throw new HttpError(400, "Use a 3–24 character username, a password of at least 8 characters, and an age of 18 or above.");
   const input = parsed.data;
+  if (input.username.toLowerCase() === "admin") throw new HttpError(409, "Username is already taken, please choose another");
   const [user] = await db.insert(usersTable).values({
     username: input.username.toLowerCase(), passwordHash: await hashPassword(input.password),
     age: input.age, avatarSeed: input.avatarSeed,
@@ -37,7 +38,8 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 router.post("/auth/login", async (req, res): Promise<void> => {
   const parsed = LoginBody.safeParse(req.body);
   if (!parsed.success) throw new HttpError(400, "Enter a valid username and password");
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.username, parsed.data.username.toLowerCase()));
+  const username = parsed.data.username.toLowerCase();
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.username, username === "admin" ? "Admin" : username));
   if (!user || !await verifyPassword(parsed.data.password, user.passwordHash)) throw new HttpError(401, "Incorrect username or password");
   setSession(res, user.id);
   res.json(LoginResponse.parse(publicUser(user)));
