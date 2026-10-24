@@ -32,8 +32,7 @@ With the API running, `node scripts/lezgo-smoke.mjs` checks approval/capacity ra
 ## Privacy and safety
 Adults only in this MVP; self-reported ages are not identity verification. Meet in public places. Passwords are hashed; event chats are private to participants. No email or phone is required.
 
-Map data © OpenStreetMap contributors; tiles © CARTO. Avatars provided by DiceBear. Internet access is needed for tiles and avatars.
-Voyager is preferred. If its public endpoint returns API-key-required watermark tiles, the app explicitly uses and labels no-key OpenStreetMap tiles instead.
+Maps use the standard free OpenStreetMap tiles with © OpenStreetMap contributors attribution. Avatars provided by DiceBear. Internet access is needed for tiles and avatars.
 
 ## License
 MIT — see [LICENSE](LICENSE).

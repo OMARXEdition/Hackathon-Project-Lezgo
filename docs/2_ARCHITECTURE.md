@@ -1,7 +1,7 @@
 # Lezgo — Architecture
 
 ## Stack
-React and TypeScript with Tailwind for the responsive web client; React Leaflet and Leaflet with free CartoDB Voyager tiles; emoji-picker-react for activity selection; DiceBear avataaars v9 for illustrated avatars. Node/Express exposes a contract-first JSON API. PostgreSQL is the project database (SQLite is an alternative for independent local forks, not used by this deployment).
+React and TypeScript with Tailwind for the responsive web client; React Leaflet and Leaflet with standard free OpenStreetMap tiles; emoji-picker-react for activity selection; DiceBear avataaars v9 for illustrated avatars. Node/Express exposes a contract-first JSON API. PostgreSQL is the project database (SQLite is an alternative for independent local forks, not used by this deployment).
 
 ## Domain schema
 - **users**: id, unique username, salted password hash, age, avatar seed, demo flag.
@@ -22,6 +22,6 @@ Requests, approvals, edits, cancellation, group sends, and group read authorizat
 The OpenAPI specification defines auth, demo switching, current user, events/editing/cancellation, attendance, applications and host decisions, private messaging preferences, conversations, groups, notifications and messages. Generated React Query hooks and Zod schemas share the contract. Passwords use Node crypto scrypt with independent random salts. Signed expiring HTTP-only session cookies authenticate users without a session table. Authentication and participant authorization are enforced server-side. The server validates all submitted data. Local username/password authentication is intentional, as explicitly requested.
 
 ## Refresh and deployment
-Map availability is checked server-side with a cached tile HEAD request. A watermark response (which may have HTTP 200) or provider failure explicitly selects OpenStreetMap tiles and displays a notice; Voyager remains preferred when its public endpoint is available.
+Both the main map and location picker load standard OpenStreetMap tiles directly, without a provider probe or fallback notice.
 
 React Query invalidation immediately updates local actions; periodic refresh keeps other users' attendance, messaging permissions, and inbox counts current. API and frontend run as separate managed services behind the project's shared path router. External tiles and avatars require internet access and retain their provider attribution. Demo seed runs idempotently. Secrets stay in environment configuration.

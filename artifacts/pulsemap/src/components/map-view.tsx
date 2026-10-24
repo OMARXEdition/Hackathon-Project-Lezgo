@@ -2,20 +2,18 @@ import { useEffect, useMemo, useRef } from "react";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useGetMapConfig, getGetMapConfigQueryKey, type Event } from "@workspace/api-client-react";
+import { type Event } from "@workspace/api-client-react";
 import { escapeHtml, ISTANBUL, spotsLeft } from "@/lib/pulse";
 
 function AvailableTiles() {
-  const { data, isError } = useGetMapConfig({ query: {
-    queryKey: getGetMapConfigQueryKey(), staleTime: 5 * 60000, retry: 1,
-  } });
-  if (!data) return <div className="absolute bottom-8 left-3 z-[500] rounded-lg bg-white px-3 py-2 text-xs text-slate-700" role="status">
-    {isError ? "Map provider unavailable. Event details are still available." : "Loading neighborhood map…"}
-  </div>;
-  return <>
-    <TileLayer key={data.url} url={data.url} attribution={data.attribution} subdomains="abcd" maxZoom={data.maxZoom} />
-    {data.fallback && <div className="absolute bottom-7 left-3 right-3 z-[500] w-fit max-w-[calc(100%-1.5rem)] rounded-lg bg-white/95 px-3 py-1.5 text-[10px] text-slate-600 shadow-sm" role="status">{data.notice}</div>}
-  </>;
+  const map = useMap();
+  useEffect(() => { map.attributionControl.setPrefix(false); }, [map]);
+  return <TileLayer
+    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    attribution="&copy; OpenStreetMap contributors"
+    subdomains="abc"
+    maxZoom={19}
+  />;
 }
 
 export function pinIcon(emoji: string, pill: string | null, opts: { full?: boolean; selected?: boolean; pick?: boolean; isPrivate?: boolean; isPaid?: boolean; canceled?: boolean } = {}) {

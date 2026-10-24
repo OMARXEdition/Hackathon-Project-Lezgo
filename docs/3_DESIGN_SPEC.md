@@ -7,7 +7,7 @@ A bold, energetic, people-first neighborhood activity map, not an enterprise dir
 Use expressive activity color, legible typography, clear spacing, rounded controls, and visible keyboard focus. Provide clear primary, secondary, destructive, disabled, error, and empty states. Keep explanatory text readable over the map. Category controls, age badges, capacity progress, and avatar clusters communicate eligibility at a glance.
 
 ## Map and markers
-Default to Istanbul's Kadıköy area, with events around Moda, campuses, and Beşiktaş. Use https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png and OpenStreetMap/CARTO attribution. Leaflet divIcon markers are glossy white rounded floating badges with shadows, large activity emoji, and a green capacity pill or muted Full pill. Selecting a pin opens event details.
+Default to Istanbul's Kadıköy area, with events around Moda, campuses, and Beşiktaş. Use https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png and only &copy; OpenStreetMap contributors attribution. Leaflet divIcon markers are glossy white rounded floating badges with shadows, large activity emoji, and a green capacity pill or muted Full pill. Selecting a pin opens event details.
 
 ## Avatars and emoji
 DiceBear URL: https://api.dicebear.com/9.x/avataaars/svg?seed=SEED. Registration offers eight distinct seeds. Attendee avatars overlap with username and age tooltips. Quick activity options: ☕, 🏐, 🏃, 🗣️, ⚽, 🎮, 📚, 🎸, 🍕, 🧘. The full emoji-picker-react picker supplements presets.

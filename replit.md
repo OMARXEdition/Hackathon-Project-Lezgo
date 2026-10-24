@@ -49,7 +49,7 @@ Lezgo adds paid/private event admission, screening and approval, shareable invit
 
 - For people, not companies.
 - Follow documentation-first AI-native SDLC: maintain PRD, architecture, design spec, README and MIT license.
-- Use free CartoDB Voyager map tiles, DiceBear avatars, and activity emoji with a full emoji picker.
+- Use standard free OpenStreetMap tiles (`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`) with only `&copy; OpenStreetMap contributors` attribution, DiceBear avatars, and activity emoji with a full emoji picker.
 - No email address or phone number in account creation.
 - Pin backgrounds represent privacy only: public white, private glowing purple. Only the top-right `$` badge represents paid status.
 
