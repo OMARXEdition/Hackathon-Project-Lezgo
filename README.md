@@ -37,6 +37,7 @@ Maps use the standard free OpenStreetMap tiles with © OpenStreetMap contributor
 ## License
 MIT — see [LICENSE](LICENSE).
 
-## To use the Admin Account
+## Admin Account
+to switch between Web and Mobile Versions 
 - Admin user Name : Admin 
 - Admin Password : hackathon 
