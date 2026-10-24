@@ -183,7 +183,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <>
             <div className="absolute inset-0"><EventsMap events={visible} selectedId={selectedId} onSelect={open} onCenter={setCenter} userLoc={userLoc} locateTick={locateTick} /></div>
             <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] p-3 pb-6">
-              <div className="glass rainbow-strip pointer-events-auto overflow-hidden rounded-3xl border border-white/70 p-2.5 pt-3.5 shadow-[0_12px_30px_-12px_rgba(168,85,247,.45)]"><FilterBar filters={filters} setFilters={setF} originLabel={originLabel} onLocate={locate} locating={locating} floating /></div>
+              <div className="glass rainbow-strip relative pointer-events-auto overflow-hidden rounded-3xl border border-white/70 p-2.5 pt-3.5 shadow-[0_12px_30px_-12px_rgba(168,85,247,.45)]"><FilterBar filters={filters} setFilters={setF} originLabel={originLabel} onLocate={locate} locating={locating} floating /></div>
             </div>
             {!q.isLoading && (
               <button onClick={() => setMView("list")} data-testid="button-count" className="absolute bottom-3 left-1/2 z-[1000] -translate-x-1/2 brand-grad rounded-full px-4 py-2 text-sm font-bold text-white shadow-brand">

@@ -104,7 +104,7 @@ function CancelModal({ eventId, title, onClose }: { eventId: number; title: stri
   const t = reason.trim();
   return (
     <div className="absolute inset-0 z-[2000] grid place-items-center bg-[hsl(222_45%_10%/.5)] p-4" onClick={onClose} data-testid="modal-cancel">
-      <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={(e) => e.stopPropagation()} className="rainbow-strip w-full max-w-[400px] overflow-hidden rounded-[28px] bg-card p-6 shadow-2xl">
+      <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} onClick={(e) => e.stopPropagation()} className="rainbow-strip relative w-full max-w-[400px] overflow-hidden rounded-[28px] bg-card p-6 shadow-2xl">
         <h2 className="font-display text-xl font-extrabold">Why are you canceling this event?</h2>
         <p className="mt-1 text-sm text-muted-foreground">“{title}” — your reason goes to every attendee's inbox and the group chat. This can't be undone.</p>
         <textarea data-testid="input-cancel-reason" autoFocus rows={4} maxLength={2000} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Rain is forecast all evening — let's reschedule." className="mt-3 w-full resize-none rounded-xl border border-input bg-background px-3 py-2 text-[15px] outline-none focus:border-primary" />
