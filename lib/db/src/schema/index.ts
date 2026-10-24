@@ -21,3 +21,6 @@ export * from "./users";
 export * from "./events";
 export * from "./attendees";
 export * from "./messages";
+export * from "./requests";
+export * from "./groups";
+export * from "./notifications";

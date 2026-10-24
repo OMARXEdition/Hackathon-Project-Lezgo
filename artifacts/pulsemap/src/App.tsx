@@ -9,8 +9,8 @@ import { AppProvider } from '@/lib/app-context';
 import { Shell } from '@/components/shell';
 import { Blank, Panel } from '@/components/bits';
 import { EventDetails } from '@/components/event-details';
-import { CreateEvent } from '@/components/create-event';
-import { ChatPanel, InboxPanel } from '@/components/inbox-chat';
+import { CreateEvent, EditEvent } from '@/components/create-event';
+import { ChatPanel, GroupChatPanel, InboxPanel } from '@/components/inbox-chat';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: true } } });
 
@@ -30,7 +30,9 @@ function Router() {
         <Route path="/" component={() => null} />
         <Route path="/events/:id">{(p) => <EventDetails key={p.id} id={Number(p.id)} />}</Route>
         <Route path="/create" component={CreateEvent} />
+        <Route path="/edit/:id">{(p) => <EditEvent key={p.id} id={Number(p.id)} />}</Route>
         <Route path="/inbox" component={InboxPanel} />
+        <Route path="/group/:id">{(p) => <GroupChatPanel key={p.id} eventId={Number(p.id)} />}</Route>
         <Route path="/chat/:eventId/:userId">{(p) => <ChatPanel key={`${p.eventId}-${p.userId}`} eventId={Number(p.eventId)} userId={Number(p.userId)} />}</Route>
         <Route component={Lost} />
       </Switch>

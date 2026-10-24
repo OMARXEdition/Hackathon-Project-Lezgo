@@ -1,7 +1,7 @@
-# PulseMap — Design Specification
+# Lezgo — Design Specification
 
 ## Product identity
-A welcoming, people-first neighborhood activity map, not an enterprise directory. The map and nearby activities form the primary experience; activity emoji and illustrated faces make people and plans recognizable.
+A bold, energetic, people-first neighborhood activity map, not an enterprise directory. Lezgo uses a lightning/map-pin action icon. The map and nearby activities form the primary experience; activity emoji and illustrated faces make people and plans recognizable.
 
 ## Visual system
 Use expressive activity color, legible typography, clear spacing, rounded controls, and visible keyboard focus. Provide clear primary, secondary, destructive, disabled, error, and empty states. Keep explanatory text readable over the map. Category controls, age badges, capacity progress, and avatar clusters communicate eligibility at a glance.
@@ -17,3 +17,9 @@ Desktop supports map and discoverable activity list together. Mobile uses compac
 
 ## Interaction feedback
 Show join and leave feedback immediately after success, preserve server validation errors, and refresh attendance and permissions periodically. Hosts see an inline messaging switch on their own event; other members see Message Host only while allowed. Chat history remains readable if new incoming messages are disabled.
+
+## Strict map pin semantics
+Pin background means privacy ONLY: public is crisp white with slate-900 text; private is purple-600 with white text, purple-300 border, and `0 0 16px #a855f7` neon shadow. Payment means ONLY a `$` badge at the top-right, independent of the background. Maintain all four public/private × free/paid combinations. A paid event detail shows its exact price and host cost explanation.
+
+## Upgraded controls and workflows
+Replace category pills with a multi-checkbox Categories popover and add a matching Languages popover. Retain text, age and open-spots filters, with distance, group-size and sorting controls in desktop and mobile. A host's create/edit form includes visibility, paid price/cost, languages, and unlimited dynamic screening rows. Request forms require every screening answer. Host review shows each applicant's face, username, age, and answer pairs with Accept/Decline. Inbox tabs distinguish Group Chats, Private Messages, Notifications / Requests. Cancellation opens a reason-required confirmation dialog and shows the exact reason on the canceled event and announcement.

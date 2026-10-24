@@ -7,5 +7,6 @@ export const attendeesTable = pgTable("event_attendees", {
   eventId: integer("event_id").notNull().references(() => eventsTable.id, { onDelete: "cascade" }),
   userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
+  groupReadAt: timestamp("group_read_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [primaryKey({ columns: [t.eventId, t.userId] })]);
 export const insertAttendeeSchema = createInsertSchema(attendeesTable);

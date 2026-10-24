@@ -1,6 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPin, MessageCircleOff, MessageCircle, Search, X } from "lucide-react";
+import { ArrowUpDown, Ban, Check, ChevronDown, Lock, LocateFixed, MapPin, MessageCircleOff, MessageCircle, Navigation, Search, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
+  getGetEventDetailQueryKey,
   getGetEventsQueryKey,
   getGetInboxQueryKey,
   useUpdateEventPrivacy,
@@ -9,7 +12,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useApp } from "@/lib/app-context";
-import { apiError, CATEGORIES, fitsAge, formatWhen, isAttending, type Filters } from "@/lib/pulse";
+import { apiError, CATEGORIES, fitsAge, formatPrice, formatWhen, isAttending, LANGUAGES, NEARBY_KM, SORT_LABELS, type Filters, type SortKey } from "@/lib/pulse";
 import { AgeBadge, CapacityBar, EmojiTile, FaceStack } from "@/components/bits";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +24,7 @@ export function PrivacySwitch({ event, compact }: { event: Event; compact?: bool
       onSuccess: (ev) => {
         qc.invalidateQueries({ queryKey: getGetEventsQueryKey() });
         qc.invalidateQueries({ queryKey: getGetInboxQueryKey() });
+        qc.invalidateQueries({ queryKey: getGetEventDetailQueryKey(ev.id) });
         toast({
           title: ev.allowMessages ? "Messages are open" : "Messages paused",
           description: ev.allowMessages ? "Neighbours can message you about this plan." : "No new messages can reach you. Old threads stay readable.",
@@ -52,6 +56,21 @@ export function PrivacySwitch({ event, compact }: { event: Event; compact?: bool
         onCheckedChange={(v) => m.mutate({ id: event.id, data: { allowMessages: v } })}
       />
     </label>
+  );
+}
+
+export function EventTags({ event, className }: { event: Event; className?: string }) {
+  return (
+    <div className={cn("flex flex-wrap gap-1.5", className)}>
+      {event.status === "canceled" && <span data-testid={`tag-canceled-${event.id}`} className="flex items-center gap-1 rounded-full bg-destructive px-2 py-0.5 text-[11px] font-bold text-destructive-foreground"><Ban className="h-3 w-3" />Canceled</span>}
+      {event.isPrivate ? (
+        <span data-testid={`tag-private-${event.id}`} className="flex items-center gap-1 rounded-full border border-purple-300 bg-purple-600 px-2 py-0.5 text-[11px] font-bold text-white shadow-[0_0_10px_#a855f7]"><Lock className="h-3 w-3" />Private</span>
+      ) : (
+        <span className="rounded-full border border-border bg-white px-2 py-0.5 text-[11px] font-bold text-slate-900">Public</span>
+      )}
+      {event.isPaid ? <span data-testid={`tag-price-${event.id}`} className="rounded-full bg-yellow-400 px-2 py-0.5 text-[11px] font-extrabold text-slate-900">{formatPrice(event.price)}</span> : <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-bold">Free</span>}
+      {(event.languages ?? []).map((l) => <span key={l} className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">{l}</span>)}
+    </div>
   );
 }
 
@@ -89,6 +108,7 @@ export function EventCard({ event, active, onOpen }: { event: Event; active?: bo
           </p>
         </div>
       </div>
+      <EventTags event={event} className="mt-3" />
       <div className="mt-3"><CapacityBar event={event} /></div>
       <div className="mt-3 flex items-center justify-between">
         <FaceStack users={event.attendees} hostId={event.host.id} size={28} />
@@ -99,13 +119,43 @@ export function EventCard({ event, active, onOpen }: { event: Event; active?: bo
   );
 }
 
-export function FilterBar({ filters, setFilters, floating }: { filters: Filters; setFilters: (f: Filters) => void; floating?: boolean }) {
+function CheckDropdown<T extends string>({ label, testId, options, value, onChange }: { label: string; testId: string; options: { id: T; label: string; emoji?: string }[]; value: T[]; onChange: (v: T[]) => void }) {
+  const on = value.length > 0;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button data-testid={`dropdown-${testId}`} className={cn(chipCls(on), "pr-2")}>
+          {label}
+          {on && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-[10px] text-accent-foreground">{value.length}</span>}
+          <ChevronDown className="h-3.5 w-3.5" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="z-[3000] w-60 rounded-2xl p-2">
+        {options.map((o) => {
+          const checked = value.includes(o.id);
+          return (
+            <label key={o.id} data-testid={`option-${testId}-${o.id}`} className="flex cursor-pointer items-center gap-2.5 rounded-xl px-2 py-2 text-sm font-semibold hover:bg-muted">
+              <Checkbox checked={checked} onCheckedChange={(c) => onChange(c ? [...value, o.id] : value.filter((x) => x !== o.id))} />
+              {o.emoji && <span className="text-base leading-none">{o.emoji}</span>}
+              {o.label}
+            </label>
+          );
+        })}
+        {on && <button data-testid={`button-clear-${testId}`} onClick={() => onChange([])} className="mt-1 w-full rounded-xl px-2 py-1.5 text-left text-xs font-bold text-primary hover:bg-muted">Clear selection</button>}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+const chipCls = (on: boolean) =>
+  cn(
+    "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    on ? "border-foreground bg-foreground text-background" : "border-border bg-card hover:border-foreground/40",
+  );
+
+export function FilterBar({ filters, setFilters, floating, originLabel, onLocate, locating }: { filters: Filters; setFilters: (f: Filters) => void; floating?: boolean; originLabel?: string; onLocate?: () => void; locating?: boolean }) {
   const { me, requireAuth } = useApp();
-  const chip = (on: boolean) =>
-    cn(
-      "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-      on ? "border-foreground bg-foreground text-background" : "border-border bg-card hover:border-foreground/40",
-    );
+  const chip = chipCls;
   return (
     <div className="space-y-2.5">
       <div className={cn("flex items-center gap-2 rounded-2xl border border-border bg-card px-3", floating && "shadow-[0_10px_30px_-12px_hsl(222_45%_16%/.4)]")}>
@@ -123,22 +173,40 @@ export function FilterBar({ filters, setFilters, floating }: { filters: Filters;
             <X className="h-4 w-4" />
           </button>
         )}
+        {onLocate && (
+          <button data-testid="button-locate" aria-label="Use my location" onClick={onLocate} className="rounded-full p-1.5 text-primary hover:bg-muted">
+            <LocateFixed className={cn("h-4 w-4", locating && "animate-pulse")} />
+          </button>
+        )}
       </div>
       <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5">
-        <button data-testid="filter-category-all" className={chip(filters.category === "all")} onClick={() => setFilters({ ...filters, category: "all" })}>All</button>
-        {CATEGORIES.map((c) => (
-          <button
-            key={c.id}
-            data-testid={`filter-category-${c.id}`}
-            className={chip(filters.category === c.id)}
-            onClick={() => setFilters({ ...filters, category: filters.category === c.id ? "all" : c.id })}
-          >
-            <span className="text-base leading-none">{c.emoji}</span>
-            {c.label}
-          </button>
-        ))}
+        <CheckDropdown label="Categories" testId="categories" options={CATEGORIES} value={filters.categories} onChange={(v) => setFilters({ ...filters, categories: v })} />
+        <CheckDropdown label="Languages" testId="languages" options={LANGUAGES.map((l) => ({ id: l, label: l }))} value={filters.languages} onChange={(v) => setFilters({ ...filters, languages: v })} />
+        <Popover>
+          <PopoverTrigger asChild>
+            <button data-testid="dropdown-sort" className={cn(chip(filters.sort !== "default"), "pr-2")}>
+              <ArrowUpDown className="h-3.5 w-3.5" />{filters.sort === "default" ? "Sort" : SORT_LABELS[filters.sort]}<ChevronDown className="h-3.5 w-3.5" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="z-[3000] w-60 rounded-2xl p-2">
+            {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
+              <button key={k} data-testid={`option-sort-${k}`} onClick={() => setFilters({ ...filters, sort: k })} className={cn("flex w-full items-center justify-between rounded-xl px-2 py-2 text-left text-sm font-semibold hover:bg-muted", filters.sort === k && "text-primary")}>
+                {SORT_LABELS[k]}{filters.sort === k && <Check className="h-4 w-4" />}
+              </button>
+            ))}
+          </PopoverContent>
+        </Popover>
       </div>
       <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
+        <button data-testid="filter-nearby" aria-pressed={filters.nearby} className={chip(filters.nearby)} onClick={() => setFilters({ ...filters, nearby: !filters.nearby })}>
+          <Navigation className="h-3.5 w-3.5" />Within {NEARBY_KM} km
+        </button>
+        <button data-testid="filter-size-small" aria-pressed={filters.size === "small"} className={chip(filters.size === "small")} onClick={() => setFilters({ ...filters, size: filters.size === "small" ? "all" : "small" })}>
+          Intimate ≤ 6
+        </button>
+        <button data-testid="filter-size-large" aria-pressed={filters.size === "large"} className={chip(filters.size === "large")} onClick={() => setFilters({ ...filters, size: filters.size === "large" ? "all" : "large" })}>
+          Larger 7+
+        </button>
         <button
           data-testid="filter-fits-age"
           aria-pressed={filters.fitsAge}
@@ -154,6 +222,7 @@ export function FilterBar({ filters, setFilters, floating }: { filters: Filters;
           Open spots
         </button>
       </div>
+      {(filters.nearby || filters.sort === "nearest") && originLabel && <p data-testid="text-origin" className="text-[11px] font-semibold text-muted-foreground">Distances measured from {originLabel}</p>}
     </div>
   );
 }

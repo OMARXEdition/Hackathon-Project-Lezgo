@@ -393,6 +393,16 @@ body::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:
 .pm-tail { width:10px; height:10px; margin-top:3px; border-radius:50%; background: hsl(222 45% 16% / .25); filter: blur(1px); }
 .pm-pin.selected { animation:none; transform: translateY(-6px) scale(1.16); }
 .pm-pin.selected .pm-badge { box-shadow: 0 0 0 3px hsl(189 78% 30%), 0 14px 26px -8px hsl(189 78% 20% / .6); }
+/* STRICT privacy rule: background = privacy only */
+.pm-badge.pm-public { background:#ffffff; color:#0f172a; }
+.pm-badge.pm-private { background:#9333ea; color:#ffffff; border:2px solid #d8b4fe; box-shadow: 0 0 16px #a855f7, 0 10px 22px -8px rgb(88 28 135 / .5); }
+.pm-badge.pm-private::after { background: linear-gradient(rgb(255 255 255 / .28), transparent); }
+.pm-pin.selected .pm-badge.pm-private { box-shadow: 0 0 0 3px hsl(189 78% 30%), 0 0 16px #a855f7; }
+/* Paid = $ badge top-right only, independent of background */
+.pm-paid { position:absolute; top:-7px; right:-7px; z-index:2; width:20px; height:20px; border-radius:999px; display:grid; place-items:center; font: 800 12px/1 var(--app-font-sans); background:#facc15; color:#0f172a; border:2px solid #0f172a; }
+.pm-pin.canceled { animation:none; opacity:.6; }
+.pm-pin.canceled .pm-pill { background:hsl(356 72% 50%); text-decoration: line-through; }
+.pm-me { width:22px; height:22px; border-radius:999px; background:hsl(189 78% 40%); border:4px solid #fff; box-shadow:0 0 0 6px hsl(189 78% 40% / .25); }
 .pm-pin.pick .pm-badge { box-shadow: 0 0 0 3px hsl(14 90% 60%), 0 14px 26px -8px hsl(14 70% 30% / .5); }
 @keyframes pm-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
 .no-scrollbar::-webkit-scrollbar { display:none } .no-scrollbar { scrollbar-width:none }

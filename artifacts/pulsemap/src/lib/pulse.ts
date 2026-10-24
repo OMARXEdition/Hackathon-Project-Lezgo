@@ -1,5 +1,5 @@
 import { format, isToday, isTomorrow } from "date-fns";
-import type { Event, EventInputCategory, User } from "@workspace/api-client-react";
+import type { Event, EventInputCategory, EventInputLanguagesItem, User } from "@workspace/api-client-react";
 
 export const CATEGORIES: { id: EventInputCategory; label: string; emoji: string; hue: string }[] = [
   { id: "coffee", label: "Coffee", emoji: "☕", hue: "24 85% 55%" },
@@ -35,22 +35,69 @@ export function formatWhen(iso: string) {
   return `${day} · ${format(d, "HH:mm")}`;
 }
 
-export type Filters = { q: string; category: EventInputCategory | "all"; fitsAge: boolean; openSpots: boolean };
-export const EMPTY_FILTERS: Filters = { q: "", category: "all", fitsAge: false, openSpots: false };
+export const LANGUAGES: EventInputLanguagesItem[] = ["Arabic", "English", "Turkish", "Spanish", "French"];
+export const NEARBY_KM = 15;
 
-export function filterEvents(events: Event[], f: Filters, me: User | null) {
+export function haversineKm(a: [number, number], b: [number, number]) {
+  const R = 6371;
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const dLat = rad(b[0] - a[0]);
+  const dLng = rad(b[1] - a[1]);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+export type SortKey = "default" | "soonest" | "nearest" | "capAsc" | "capDesc";
+export type SizeKey = "all" | "small" | "large";
+export type Filters = {
+  q: string;
+  categories: EventInputCategory[];
+  languages: EventInputLanguagesItem[];
+  fitsAge: boolean;
+  openSpots: boolean;
+  nearby: boolean;
+  size: SizeKey;
+  sort: SortKey;
+};
+export const EMPTY_FILTERS: Filters = { q: "", categories: [], languages: [], fitsAge: false, openSpots: false, nearby: false, size: "all", sort: "default" };
+
+export const SORT_LABELS: Record<SortKey, string> = {
+  default: "Recommended",
+  soonest: "Soonest first",
+  nearest: "Nearest first",
+  capAsc: "Capacity: small → large",
+  capDesc: "Capacity: large → small",
+};
+
+export function filterEvents(events: Event[], f: Filters, me: User | null, origin: [number, number] = ISTANBUL) {
   const q = f.q.trim().toLocaleLowerCase("tr");
-  return events.filter((e) => {
-    if (f.category !== "all" && e.category !== f.category) return false;
+  const dist = (e: Event) => haversineKm(origin, [e.lat, e.lng]);
+  const out = events.filter((e) => {
+    if (f.categories.length && !f.categories.includes(e.category)) return false;
+    if (f.languages.length && !(e.languages ?? []).some((l) => f.languages.includes(l))) return false;
     if (f.openSpots && spotsLeft(e) === 0) return false;
     if (f.fitsAge && me && !fitsAge(e, me)) return false;
+    if (f.size === "small" && e.maxPeople > 6) return false;
+    if (f.size === "large" && e.maxPeople < 7) return false;
+    if (f.nearby && dist(e) > NEARBY_KM) return false;
     if (q) {
-      const hay = `${e.title} ${e.description} ${e.locationName} ${e.host.username} ${e.category}`.toLocaleLowerCase("tr");
+      const hay = `${e.title} ${e.description} ${e.locationName} ${e.host.username} ${e.category} ${(e.languages ?? []).join(" ")}`.toLocaleLowerCase("tr");
       if (!hay.includes(q)) return false;
     }
     return true;
   });
+  const sort = f.sort === "default" && f.nearby ? "nearest" : f.sort;
+  const t = (e: Event) => new Date(e.startsAt).getTime();
+  if (sort === "soonest") out.sort((a, b) => t(a) - t(b));
+  else if (sort === "nearest") out.sort((a, b) => dist(a) - dist(b));
+  else if (sort === "capAsc") out.sort((a, b) => a.maxPeople - b.maxPeople || t(a) - t(b));
+  else if (sort === "capDesc") out.sort((a, b) => b.maxPeople - a.maxPeople || t(a) - t(b));
+  return out;
 }
+
+export const needsApproval = (e: Pick<Event, "isPrivate" | "isPaid">) => e.isPrivate || e.isPaid;
+export const formatPrice = (n: number) => `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
+export const inviteLink = (id: number | string) => `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/?$/, "/")}?invite=${encodeURIComponent(String(id))}`;
 
 export const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string);

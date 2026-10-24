@@ -1,3 +1,1 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
-</svg>
+<svg width="180" height="180" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#127A8C"/><path d="M32 6c-10.5 0-19 8.2-19 18.4C13 38 32 58 32 58s19-20 19-33.6C51 14.2 42.5 6 32 6z" fill="#F7643C"/><path d="M35.5 13 23 30h8l-3.5 15L41 26h-8l2.5-13z" fill="#FFF8EC"/></svg>

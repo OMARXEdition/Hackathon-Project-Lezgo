@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useRoute } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence } from "framer-motion";
@@ -9,22 +9,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useApp, useEvents } from "@/lib/app-context";
-import { apiError, EMPTY_FILTERS, filterEvents, type Filters } from "@/lib/pulse";
+import { apiError, EMPTY_FILTERS, filterEvents, ISTANBUL, type Filters } from "@/lib/pulse";
 import { Blank, Face } from "@/components/bits";
 import { EventCard, FilterBar } from "@/components/event-bits";
 import { EventsMap } from "@/components/map-view";
 import { AuthModal, DemoList } from "@/components/auth";
-import { useInbox } from "@/components/inbox-chat";
+import { inboxBadge, useInbox } from "@/components/inbox-chat";
 import { cn } from "@/lib/utils";
 
 function Logo() {
   return (
     <Link href="/" data-testid="link-home" className="flex items-center gap-2 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-      <span className="relative grid h-9 w-9 place-items-center rounded-[12px] bg-primary text-primary-foreground">
-        <span className="absolute h-3 w-3 rounded-full bg-accent" />
-        <span className="absolute h-3 w-3 animate-ping rounded-full bg-accent/70" />
+      <span className="relative grid h-9 w-9 place-items-center rounded-[12px] bg-primary">
+        <svg viewBox="0 0 64 64" className="h-8 w-8" aria-hidden><path d="M32 6c-10.5 0-19 8.2-19 18.4C13 38 32 58 32 58s19-20 19-33.6C51 14.2 42.5 6 32 6z" fill="hsl(var(--accent))" /><path d="M35.5 13 23 30h8l-3.5 15L41 26h-8l2.5-13z" fill="#FFF8EC" /></svg>
       </span>
-      <span className="font-display text-xl font-extrabold">Pulse<span className="text-accent">Map</span></span>
+      <span className="font-display text-xl font-extrabold italic tracking-tight">Lez<span className="text-accent">go</span></span>
     </Link>
   );
 }
@@ -107,17 +106,51 @@ function EventList({ events, all, loading, error, retry, selectedId, open, reset
 }
 
 export function Shell({ children }: { children: ReactNode }) {
-  const { mobile, preview, narrowWindow, me, requireAuth } = useApp();
+  const { mobile, preview, narrowWindow, me, meLoading, requireAuth, invite, clearInvite, openAuth, auth } = useApp();
+  const { toast } = useToast();
   const [location, nav] = useLocation();
   const [, params] = useRoute("/events/:id");
   const selectedId = params ? Number(params.id) : null;
   const qc = useQueryClient();
   const q = useEvents();
   const inbox = useInbox();
-  const unread = me ? inbox.data?.unreadCount ?? 0 : 0;
+  const unread = me ? inboxBadge(inbox.data) : 0;
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [mView, setMView] = useState<"map" | "list">("map");
-  const visible = useMemo(() => filterEvents(q.data ?? [], filters, me), [q.data, filters, me]);
+  const [center, setCenter] = useState<[number, number]>(ISTANBUL);
+  const [userLoc, setUserLoc] = useState<[number, number] | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locateTick, setLocateTick] = useState(0);
+  const origin = userLoc ?? center;
+  const visible = useMemo(() => filterEvents(q.data ?? [], filters, me, origin), [q.data, filters, me, origin]);
+  const locate = useCallback(() => {
+    if (!("geolocation" in navigator)) { toast({ title: "Location unavailable", description: "Using the map center instead." }); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (p) => { setLocating(false); setUserLoc([p.coords.latitude, p.coords.longitude]); setLocateTick((t) => t + 1); },
+      () => { setLocating(false); setUserLoc(null); toast({ title: "Location permission denied", description: "Distances use the current map center instead." }); },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 },
+    );
+  }, [toast]);
+  const setF = (f: Filters) => {
+    if ((f.nearby && !filters.nearby) || (f.sort === "nearest" && filters.sort !== "nearest")) { if (!userLoc) locate(); }
+    setFilters(f);
+  };
+  const originLabel = userLoc ? "your location" : "the map center";
+
+  // Invite flow: /?invite=ID → auth first, then open the event automatically.
+  const inviteAsked = useRef(false);
+  useEffect(() => {
+    if (!invite || meLoading) return;
+    if (!me) {
+      if (!inviteAsked.current && !auth) { inviteAsked.current = true; openAuth("register", "You've been invited to a Lezgo plan. Join or sign in to see it."); }
+      return;
+    }
+    const id = Number(invite);
+    clearInvite();
+    if (Number.isFinite(id) && id > 0) nav(`/events/${id}`);
+    else toast({ title: "Invite link looks broken", description: "Ask the host for a fresh link.", variant: "destructive" });
+  }, [invite, me, meLoading, auth, openAuth, clearInvite, nav, toast]);
   const open = (id: number) => { setMView("map"); nav(`/events/${id}`); };
   const goCreate = () => { if (requireAuth("Sign in to host a plan.")) nav("/create"); };
   const retry = () => qc.invalidateQueries({ queryKey: getGetEventsQueryKey() });
@@ -147,9 +180,9 @@ export function Shell({ children }: { children: ReactNode }) {
       <main className="relative min-h-0 flex-1">
         {mobile ? (
           <>
-            <div className="absolute inset-0"><EventsMap events={visible} selectedId={selectedId} onSelect={open} /></div>
+            <div className="absolute inset-0"><EventsMap events={visible} selectedId={selectedId} onSelect={open} onCenter={setCenter} userLoc={userLoc} locateTick={locateTick} /></div>
             <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] bg-gradient-to-b from-background/90 via-background/60 to-transparent p-3 pb-6">
-              <div className="pointer-events-auto"><FilterBar filters={filters} setFilters={setFilters} floating /></div>
+              <div className="pointer-events-auto"><FilterBar filters={filters} setFilters={setF} originLabel={originLabel} onLocate={locate} locating={locating} floating /></div>
             </div>
             {!q.isLoading && (
               <button onClick={() => setMView("list")} data-testid="button-count" className="absolute bottom-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full bg-foreground px-4 py-2 text-sm font-bold text-background shadow-lg">
@@ -158,7 +191,7 @@ export function Shell({ children }: { children: ReactNode }) {
             )}
             {mView === "list" && (
               <div className="absolute inset-0 z-[1050] overflow-y-auto bg-background p-3 animate-in fade-in slide-in-from-bottom-4">
-                <div className="mb-3"><FilterBar filters={filters} setFilters={setFilters} /></div>
+                <div className="mb-3"><FilterBar filters={filters} setFilters={setF} originLabel={originLabel} onLocate={locate} locating={locating} /></div>
                 <h2 className="mb-2 font-display text-lg font-bold">{visible.length} plans around Kadıköy</h2>
                 {list}
               </div>
@@ -172,12 +205,12 @@ export function Shell({ children }: { children: ReactNode }) {
                   <h1 className="font-display text-[28px] font-extrabold leading-none">Small plans,<br /><span className="text-primary">real neighbours.</span></h1>
                   <p className="mt-2 text-sm text-muted-foreground">Kadıköy, Moda, Beşiktaş & the campuses — pick a pin, show up, meet people.</p>
                 </div>
-                <FilterBar filters={filters} setFilters={setFilters} />
+                <FilterBar filters={filters} setFilters={setF} originLabel={originLabel} onLocate={locate} locating={locating} />
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" data-testid="text-result-count">{q.isLoading ? "Loading plans…" : `${visible.length} of ${q.data?.length ?? 0} plans`}</p>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">{list}</div>
             </section>
-            <div className="relative"><EventsMap events={visible} selectedId={selectedId} onSelect={open} /></div>
+            <div className="relative"><EventsMap events={visible} selectedId={selectedId} onSelect={open} onCenter={setCenter} userLoc={userLoc} locateTick={locateTick} /></div>
           </div>
         )}
         <AnimatePresence>{children}</AnimatePresence>
@@ -196,7 +229,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <button data-testid="nav-create" onClick={goCreate} aria-label="Host a plan" className="mx-auto -mt-6 grid h-14 w-14 place-items-center rounded-2xl bg-accent text-accent-foreground shadow-[0_12px_24px_-8px_hsl(14_80%_40%/.6)] transition active:scale-90">
             <Plus className="h-6 w-6" />
           </button>
-          <button data-testid="nav-inbox" onClick={() => nav("/inbox")} className={cn("relative flex flex-col items-center gap-0.5 text-[11px] font-bold", location.startsWith("/inbox") || location.startsWith("/chat") ? "text-primary" : "text-muted-foreground")}>
+          <button data-testid="nav-inbox" onClick={() => nav("/inbox")} className={cn("relative flex flex-col items-center gap-0.5 text-[11px] font-bold", location.startsWith("/inbox") || location.startsWith("/chat") || location.startsWith("/group") ? "text-primary" : "text-muted-foreground")}>
             <Inbox className="h-5 w-5" />Inbox
             {unread > 0 && <span data-testid="badge-inbox-unread-mobile" className="absolute -top-1 right-[22%] grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[9px] text-accent-foreground">{unread}</span>}
           </button>

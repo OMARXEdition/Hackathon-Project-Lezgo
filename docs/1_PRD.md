@@ -1,4 +1,4 @@
-# PulseMap — Product Requirements
+# Lezgo — Product Requirements
 
 ## Problem and audience
 Students and neighborhood or compound residents need an easy way to find nearby people for casual activities, without business listings, phone numbers, or public contact details.
@@ -17,3 +17,10 @@ The MVP supports adults aged 18 and above; age is self-reported and not verified
 
 ## Acceptance criteria
 All six seeded activities have map coordinates, realistic attendance, and event details. Search and category, age, and open-spots filters affect pins and list together. Create, join, leave, privacy changes, and messages persist in the database. Desktop and mobile layouts support the same actions. Empty states, validation errors, full events, and age restrictions are visible and understandable.
+
+## Lezgo upgrade
+Public/private controls admission, not listing visibility: private events remain discoverable as purple pins and require host approval. Paid events also require approval, regardless of privacy; prices and cost details are informational with no online collection. Public-free events retain immediate joins. Membership, not a pending request or invite link alone, grants group-chat access. Screening questions are dynamic and every answer is required; applications retain a snapshot of their questions. Only hosts can see applicants' answers or decide applications. Event edits preserve all current attendees' age eligibility and cannot reduce capacity below attendance.
+
+Hosts can copy shareable invite links; guests must authenticate and then automatically see the invited event. Inbox includes group chats, private messages, and notifications/requests. Cancellation requires a non-blank explanation, is host-only, and atomically broadcasts the exact title/reason to joined members and the event group. Pending applicants are informed and their requests closed. Canceled events cannot be joined, edited, approved, or sent new group messages; existing members can read history.
+
+Discovery includes multi-category and multi-language checkbox dropdowns, <=15km distance filtering with nearest-first ordering, soonest sorting, and small (<=6) / large (7+) capacity filtering and ascending/descending capacity sorts. Distance uses user-approved geolocation or actual current map center, never background tracking.

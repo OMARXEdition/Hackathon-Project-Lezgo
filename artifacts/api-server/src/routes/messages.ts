@@ -1,10 +1,11 @@
 import { Router, type IRouter } from "express";
-import { db, eventsTable, messagesTable, usersTable, type UserRow, type MessageRow } from "@workspace/db";
+import { db, eventsTable, messagesTable, usersTable, attendeesTable, groupMessagesTable, requestsTable, notificationsTable, type UserRow, type MessageRow } from "@workspace/db";
 import { and, or, eq, asc, desc, isNull } from "drizzle-orm";
 import { GetMessagesParams, SendMessageParams, SendMessageBody, GetMessagesResponse, GetInboxResponse, SendMessageResponse } from "@workspace/api-zod";
 import { publicUser, requireUser } from "../lib/auth";
 import { getEvent } from "../lib/events";
 import { HttpError } from "../lib/errors";
+import { groupMessageJson, requestJson } from "../lib/community";
 
 const router: IRouter = Router();
 const messageJson = (m: MessageRow) => ({ ...m, createdAt: m.createdAt.toISOString(), readAt: m.readAt?.toISOString() ?? null });
@@ -36,7 +37,31 @@ router.get("/inbox", requireUser, async (_req, res): Promise<void> => {
     return { eventId: event.id, eventTitle: event.title, eventEmoji: event.emoji, otherUser: publicUser(other!),
       lastMessage: group.lastMessage, unreadCount: group.unreadCount, allowMessages: event.allowMessages };
   }));
-  res.json(GetInboxResponse.parse({ conversations, unreadCount: conversations.reduce((sum, c) => sum + c.unreadCount, 0) }));
+  const memberships = await db.select({ membership: attendeesTable, event: eventsTable }).from(attendeesTable)
+    .innerJoin(eventsTable, eq(attendeesTable.eventId, eventsTable.id)).where(eq(attendeesTable.userId, user.id));
+  const groups = await Promise.all(memberships.map(async ({ membership, event }) => {
+    const history = await db.select().from(groupMessagesTable).where(eq(groupMessagesTable.eventId, event.id))
+      .orderBy(desc(groupMessagesTable.createdAt), desc(groupMessagesTable.id));
+    const members = await db.select({ userId: attendeesTable.userId }).from(attendeesTable).where(eq(attendeesTable.eventId, event.id));
+    return { eventId: event.id, eventTitle: event.title, eventEmoji: event.emoji, memberCount: members.length,
+      canceled: event.status === "canceled", lastMessage: history[0] ? await groupMessageJson(history[0]) : null,
+      unreadCount: history.filter(m => m.senderId !== user.id && m.createdAt > membership.groupReadAt).length };
+  }));
+  groups.sort((a, b) => (b.lastMessage?.createdAt ?? "").localeCompare(a.lastMessage?.createdAt ?? ""));
+  const pendingRequests = await db.select({ request: requestsTable }).from(requestsTable)
+    .innerJoin(eventsTable, eq(requestsTable.eventId, eventsTable.id))
+    .where(and(eq(eventsTable.hostId, user.id), eq(requestsTable.status, "pending"))).orderBy(asc(requestsTable.createdAt));
+  const requests = await Promise.all(pendingRequests.map(r => requestJson(r.request)));
+  const noticeRows = await db.select({ notification: notificationsTable, title: eventsTable.title }).from(notificationsTable)
+    .innerJoin(eventsTable, eq(notificationsTable.eventId, eventsTable.id))
+    .where(eq(notificationsTable.userId, user.id)).orderBy(desc(notificationsTable.createdAt), desc(notificationsTable.id));
+  const notifications = noticeRows.map(({ notification: n, title }) => ({
+    id: n.id, eventId: n.eventId, eventTitle: title, text: n.text, kind: n.kind,
+    readAt: n.readAt?.toISOString() ?? null, createdAt: n.createdAt.toISOString(),
+  }));
+  res.json(GetInboxResponse.parse({ conversations, groups, requests, notifications,
+    unreadCount: conversations.reduce((sum, c) => sum + c.unreadCount, 0)
+      + groups.reduce((sum, g) => sum + g.unreadCount, 0) + notifications.filter(n => !n.readAt).length }));
 });
 router.get("/messages/:eventId/:userId", requireUser, async (req, res): Promise<void> => {
   const parsed = GetMessagesParams.safeParse(req.params);

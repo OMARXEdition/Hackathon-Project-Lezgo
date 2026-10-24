@@ -1,13 +1,12 @@
 import { randomBytes } from "node:crypto";
-import { db, usersTable, eventsTable, attendeesTable, messagesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, usersTable, eventsTable, attendeesTable, messagesTable, groupMessagesTable, requestsTable, notificationsTable } from "@workspace/db";
+import { and, eq, sql } from "drizzle-orm";
 import { hashPassword } from "./auth";
 import { logger } from "./logger";
 
 export async function seedDemo() {
   // One advisory lock prevents duplicate seed data if two instances start together.
   await db.transaction(async tx => {
-    const { sql } = await import("drizzle-orm");
     await tx.execute(sql`select pg_advisory_xact_lock(7826301)`);
     const existing = await tx.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.isDemo, true)).limit(1);
     if (existing.length) return;
@@ -51,5 +50,51 @@ export async function seedDemo() {
     ];
     await tx.insert(messagesTable).values(sampleMessages);
   });
-  logger.info("PulseMap demonstration data is ready");
+  await seedLezgoUpgrade();
+  logger.info("Lezgo demonstration data is ready");
+}
+
+async function seedLezgoUpgrade() {
+  await db.transaction(async tx => {
+    await tx.execute(sql`select pg_advisory_xact_lock(7826301)`);
+    const demoUsers = await tx.select().from(usersTable).where(eq(usersTable.isDemo, true));
+    const userByName = new Map(demoUsers.map(u => [u.username, u]));
+    const configs = [
+      { title: "Coffee Talk in English to Practice", isPrivate: false, isPaid: false, price: 0, costDetails: "", languages: ["English", "Turkish"], screeningQuestions: [], applicant: null, answers: [] },
+      { title: "Compound Volleyball Match", isPrivate: false, isPaid: true, price: 15, costDetails: "Court rental & equipment", languages: ["Turkish", "English", "Arabic"], screeningQuestions: [], applicant: "elif", answers: [] },
+      { title: "Morning 5K Running Group", isPrivate: false, isPaid: false, price: 0, costDetails: "", languages: ["Arabic", "English", "Turkish"], screeningQuestions: [], applicant: null, answers: [] },
+      { title: "Coffee Talks & Book Swap", isPrivate: true, isPaid: true, price: 8, costDetails: "Shared café table & one drink", languages: ["Turkish", "English"], screeningQuestions: ["Which book are you bringing?"], applicant: null, answers: [] },
+      { title: "UI/UX & Coding Study Session", isPrivate: true, isPaid: false, price: 0, costDetails: "", languages: ["English", "Arabic"], screeningQuestions: ["What is your software skill level?", "What would you like to work on?"], applicant: "zeynep", answers: ["Intermediate — I build React apps.", "A neighborhood activity app and its design system."] },
+      { title: "Evening Board Games", isPrivate: true, isPaid: true, price: 10, costDetails: "Game library access & snacks", languages: ["Turkish", "English", "Arabic"], screeningQuestions: ["What is your favorite board game?", "Are you happy to learn a new game?"], applicant: "deniz", answers: ["Codenames", "Absolutely — happy to learn and help explain the rules."] },
+    ];
+    for (const { title, applicant, answers, ...config } of configs) {
+      const [event] = await tx.select({ event: eventsTable }).from(eventsTable)
+        .innerJoin(usersTable, eq(eventsTable.hostId, usersTable.id)).where(and(eq(eventsTable.title, title), eq(usersTable.isDemo, true)));
+      if (!event) continue;
+      const e = event.event;
+      const [group] = await tx.select({ id: groupMessagesTable.id }).from(groupMessagesTable).where(eq(groupMessagesTable.eventId, e.id)).limit(1);
+      // A seeded group is the durable one-time upgrade marker; never overwrite host edits.
+      if (group) continue;
+      const upgraded = { ...config, ...(title.includes("Study Session") ? { maxAge: 30 } : {}),
+        ...(title.includes("Book Swap") ? { maxPeople: 6 } : {}) };
+      await tx.update(eventsTable).set(upgraded).where(eq(eventsTable.id, e.id));
+      const attendees = await tx.select().from(attendeesTable).where(eq(attendeesTable.eventId, e.id));
+      await tx.insert(groupMessagesTable).values([
+        { eventId: e.id, senderId: e.hostId, text: `Welcome to ${title}! Let's use this chat to coordinate.`, isSystem: true, createdAt: new Date(Date.now() - 35 * 60000) },
+        { eventId: e.id, senderId: attendees.find(a => a.userId !== e.hostId)?.userId ?? e.hostId, text: "Looking forward to meeting everyone! I'll be there a few minutes early.", createdAt: new Date(Date.now() - 10 * 60000) },
+      ]);
+      if (config.isPrivate || config.isPaid) {
+        for (const attendee of attendees.filter(a => a.userId !== e.hostId)) {
+          await tx.insert(requestsTable).values({ eventId: e.id, userId: attendee.userId, status: "accepted",
+            answers: config.screeningQuestions.map(question => ({ question, answer: question.includes("skill") ? "Intermediate" : "Happy to join and take part!" })) }).onConflictDoNothing();
+        }
+      }
+      const applicantUser = applicant ? userByName.get(applicant) : null;
+      if (applicantUser && !attendees.some(a => a.userId === applicantUser.id)) {
+        await tx.insert(requestsTable).values({ eventId: e.id, userId: applicantUser.id,
+          answers: config.screeningQuestions.map((question, i) => ({ question, answer: answers[i] ?? "Looking forward to joining!" })) }).onConflictDoNothing();
+        await tx.insert(notificationsTable).values({ eventId: e.id, userId: e.hostId, kind: "request", text: `${applicantUser.username} requested to join ${title}` });
+      }
+    }
+  });
 }

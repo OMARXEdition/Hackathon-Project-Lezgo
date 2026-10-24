@@ -1,8 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  getGetEventsQueryKey,
+  getGetDemoUsersQueryKey,
+  getGetEventDetailQueryKey,
+  getGetEventRequestsQueryKey,
+  getGetGroupMessagesQueryKey,
   getGetInboxQueryKey,
+  getGetEventsQueryKey,
+  getGetMapConfigQueryKey,
   getGetMeQueryKey,
   useGetEvents,
   useGetMe,
@@ -24,6 +29,15 @@ type Ctx = {
   closeAuth: () => void;
   requireAuth: (reason: string) => boolean;
   onIdentityChange: () => void;
+  invite: string | null;
+  clearInvite: () => void;
+};
+
+const KEEP = new Set<string>([getGetMeQueryKey()[0], getGetMapConfigQueryKey()[0], getGetDemoUsersQueryKey()[0]]);
+const readInvite = () => {
+  if (typeof window === "undefined") return null;
+  const v = new URLSearchParams(window.location.search).get("invite");
+  return v && v.trim() ? v.trim() : null;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
@@ -53,12 +67,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     [me],
   );
+  const [invite, setInvite] = useState<string | null>(readInvite);
+  const clearInvite = useCallback(() => {
+    setInvite(null);
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("invite")) {
+      url.searchParams.delete("invite");
+      window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    }
+  }, []);
+
+  // Every session-specific cache (events, details, requests, groups, inbox, DMs) is wiped on identity change.
+  const resetSession = useCallback(() => {
+    const pred = (q: { queryKey: readonly unknown[] }) => !KEEP.has(String(q.queryKey[0]));
+    qc.cancelQueries({ predicate: pred });
+    qc.resetQueries({ predicate: pred });
+  }, [qc]);
   const onIdentityChange = useCallback(() => {
-    qc.removeQueries({ queryKey: getGetInboxQueryKey() });
-    qc.removeQueries({ predicate: (q) => String(q.queryKey[0]).startsWith("/api/messages") });
+    resetSession();
     qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
     qc.invalidateQueries({ queryKey: getGetEventsQueryKey() });
-  }, [qc]);
+  }, [qc, resetSession]);
+
+  // Also catch identity changes we didn't trigger (expired session, other tab).
+  const lastId = useRef<number | null | undefined>(undefined);
+  useEffect(() => {
+    if (meQ.isLoading) return;
+    const id = me?.id ?? null;
+    if (lastId.current !== undefined && lastId.current !== id) resetSession();
+    lastId.current = id;
+  }, [me?.id, meQ.isLoading, resetSession]);
 
   const value = useMemo<Ctx>(
     () => ({
@@ -73,8 +111,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       closeAuth,
       requireAuth,
       onIdentityChange,
+      invite,
+      clearInvite,
     }),
-    [narrowWindow, preview, me, meQ.isLoading, auth, openAuth, closeAuth, requireAuth, onIdentityChange],
+    [narrowWindow, preview, me, meQ.isLoading, auth, openAuth, closeAuth, requireAuth, onIdentityChange, invite, clearInvite],
   );
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
@@ -86,5 +126,21 @@ export function useApp() {
 }
 
 export function useEvents() {
-  return useGetEvents({ query: { queryKey: getGetEventsQueryKey(), refetchInterval: 4000 } });
+  return useGetEvents({ query: { queryKey: getGetEventsQueryKey(), refetchInterval: 3500 } });
+}
+
+export function useRefreshEvent() {
+  const qc = useQueryClient();
+  return useCallback(
+    (id?: number) => {
+      qc.invalidateQueries({ queryKey: getGetEventsQueryKey() });
+      qc.invalidateQueries({ queryKey: getGetInboxQueryKey() });
+      if (id != null) {
+        qc.invalidateQueries({ queryKey: getGetEventDetailQueryKey(id) });
+        qc.invalidateQueries({ queryKey: getGetEventRequestsQueryKey(id) });
+        qc.invalidateQueries({ queryKey: getGetGroupMessagesQueryKey(id) });
+      }
+    },
+    [qc],
+  );
 }

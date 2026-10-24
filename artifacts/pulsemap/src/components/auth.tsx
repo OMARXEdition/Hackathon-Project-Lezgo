@@ -82,7 +82,7 @@ export function AuthModal() {
     if (password.length < 8) return "Password needs at least 8 characters.";
     if (full) {
       const a = Number(age);
-      if (!Number.isInteger(a) || a < 18 || a > 120) return "PulseMap is for adults 18 and over.";
+      if (!Number.isInteger(a) || a < 18 || a > 120) return "Lezgo is for adults 18 and over.";
     }
     return null;
   };
