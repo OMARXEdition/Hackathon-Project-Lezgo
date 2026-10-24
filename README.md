@@ -1,0 +1,26 @@
+# PulseMap
+
+Open-source, map-first hyper-local activities for people, not companies.
+
+## Documentation-first development
+The product brief, architecture, and design specification were created before implementation:
+- [Product requirements](docs/1_PRD.md)
+- [Architecture](docs/2_ARCHITECTURE.md)
+- [Design specification](docs/3_DESIGN_SPEC.md)
+
+## Development
+Use Node.js 24 and pnpm. Run `pnpm install`, configure `DATABASE_URL` and `SESSION_SECRET` through environment secrets, then start the API and PulseMap managed workflows. The API uses `/api`; the frontend uses its configured artifact base path.
+
+`pnpm --filter @workspace/api-spec run codegen` regenerates API bindings.
+`pnpm run typecheck` checks the workspace.
+
+The database is seeded idempotently with five clearly labeled demo accounts and six Istanbul activities. Use the in-app demo switcher to explore different ages and roles. Demo switching intentionally grants access to demo identities and should be disabled for a non-demo production rollout.
+
+## Privacy and safety
+Adults only in this MVP; self-reported ages are not identity verification. Meet in public places. Passwords are hashed; event chats are private to participants. No email or phone is required.
+
+Map data © OpenStreetMap contributors; tiles © CARTO. Avatars provided by DiceBear. Internet access is needed for tiles and avatars.
+Voyager is preferred. If its public endpoint returns API-key-required watermark tiles, the app explicitly uses and labels no-key OpenStreetMap tiles instead.
+
+## License
+MIT — see [LICENSE](LICENSE).

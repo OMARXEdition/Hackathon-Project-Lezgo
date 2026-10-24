@@ -1,36 +1,301 @@
 openapi: 3.1.0
-info:
-  # Do not change the title, if the title changes, the import paths will be broken
-  title: Api
-  version: 0.1.0
-  description: API specification
-servers:
-  - url: /api
-    description: Base API path
-tags:
-  - name: health
-    description: Health operations
+info: {title: Api, version: 1.0.0, description: PulseMap community API}
+servers: [{url: /api}]
 paths:
+  /map-config:
+    get:
+      operationId: getMapConfig
+      responses:
+        "200":
+          description: Available public map tile provider
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/MapConfig"}
   /healthz:
     get:
       operationId: healthCheck
-      tags: [health]
-      summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/HealthStatus"
+              schema: {$ref: "#/components/schemas/HealthStatus"}
+  /auth/me:
+    get:
+      operationId: getMe
+      responses:
+        "200":
+          description: Current session
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Session"}
+  /auth/register:
+    post:
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/Registration"}
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/User"}
+  /auth/login:
+    post:
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/Credentials"}
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/User"}
+  /auth/logout:
+    post:
+      operationId: logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Success"}
+  /demo-users:
+    get:
+      operationId: getDemoUsers
+      responses:
+        "200":
+          description: Demonstration accounts
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/User"}}
+  /auth/demo:
+    post:
+      operationId: switchDemoUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/DemoSelection"}
+      responses:
+        "200":
+          description: Selected account
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/User"}
+  /events:
+    get:
+      operationId: getEvents
+      responses:
+        "200":
+          description: Activities
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/Event"}}
+    post:
+      operationId: createEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/EventInput"}
+      responses:
+        "201":
+          description: Created event
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Event"}
+  /events/{id}/join:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: integer}}
+    post:
+      operationId: joinEvent
+      responses:
+        "200":
+          description: Joined
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Event"}
+  /events/{id}/leave:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: integer}}
+    post:
+      operationId: leaveEvent
+      responses:
+        "200":
+          description: Left
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Event"}
+  /events/{id}/privacy:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: integer}}
+    patch:
+      operationId: updateEventPrivacy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/PrivacyInput"}
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Event"}
+  /inbox:
+    get:
+      operationId: getInbox
+      responses:
+        "200":
+          description: Private conversations
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Inbox"}
+  /messages/{eventId}/{userId}:
+    parameters:
+      - {name: eventId, in: path, required: true, schema: {type: integer}}
+      - {name: userId, in: path, required: true, schema: {type: integer}}
+    get:
+      operationId: getMessages
+      responses:
+        "200":
+          description: Conversation history, marks received messages as read
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/Message"}}
+    post:
+      operationId: sendMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/MessageInput"}
+      responses:
+        "201":
+          description: Sent
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Message"}
 components:
   schemas:
+    MapConfig:
+      type: object
+      required: [url, attribution, fallback, notice, maxZoom]
+      properties:
+        url: {type: string}
+        attribution: {type: string}
+        fallback: {type: boolean}
+        notice: {type: string}
+        maxZoom: {type: integer}
     HealthStatus:
       type: object
+      required: [status]
+      properties: {status: {type: string}}
+    Success:
+      type: object
+      required: [success]
+      properties: {success: {type: boolean}}
+    User:
+      type: object
+      required: [id, username, age, avatarSeed, isDemo]
       properties:
-        status:
-          type: string
-      required:
-        - status
-
+        id: {type: integer}
+        username: {type: string}
+        age: {type: integer}
+        avatarSeed: {type: string}
+        isDemo: {type: boolean}
+    Session:
+      type: object
+      required: [user]
+      properties:
+        user:
+          anyOf:
+            - {$ref: "#/components/schemas/User"}
+            - {type: "null"}
+    Credentials:
+      type: object
+      required: [username, password]
+      properties:
+        username: {type: string, minLength: 3, maxLength: 24, pattern: "^[a-zA-Z0-9_]+$"}
+        password: {type: string, minLength: 8, maxLength: 128}
+    Registration:
+      type: object
+      required: [username, password, age, avatarSeed]
+      properties:
+        username: {type: string, minLength: 3, maxLength: 24, pattern: "^[a-zA-Z0-9_]+$"}
+        password: {type: string, minLength: 8, maxLength: 128}
+        age: {type: integer, minimum: 18, maximum: 120}
+        avatarSeed: {type: string, minLength: 1, maxLength: 40}
+    DemoSelection:
+      type: object
+      required: [userId]
+      properties: {userId: {type: integer}}
+    EventInput:
+      type: object
+      required: [title, description, category, locationName, lat, lng, startsAt, maxPeople, minAge, maxAge, emoji, allowMessages]
+      properties:
+        title: {type: string, minLength: 3, maxLength: 120}
+        description: {type: string, maxLength: 2000}
+        category: {type: string, enum: [coffee, sports, running, study, games]}
+        locationName: {type: string, minLength: 2, maxLength: 160}
+        lat: {type: number, minimum: -90, maximum: 90}
+        lng: {type: number, minimum: -180, maximum: 180}
+        startsAt: {type: string, format: date-time}
+        maxPeople: {type: integer, minimum: 2, maximum: 100}
+        minAge: {type: integer, minimum: 18, maximum: 120}
+        maxAge: {type: integer, minimum: 18, maximum: 120}
+        emoji: {type: string, minLength: 1, maxLength: 24}
+        allowMessages: {type: boolean}
+    Event:
+      allOf:
+        - {$ref: "#/components/schemas/EventInput"}
+        - type: object
+          required: [id, host, attendees, joinedCount]
+          properties:
+            id: {type: integer}
+            host: {$ref: "#/components/schemas/User"}
+            attendees: {type: array, items: {$ref: "#/components/schemas/User"}}
+            joinedCount: {type: integer}
+    PrivacyInput:
+      type: object
+      required: [allowMessages]
+      properties: {allowMessages: {type: boolean}}
+    MessageInput:
+      type: object
+      required: [text]
+      properties: {text: {type: string, minLength: 1, maxLength: 2000}}
+    Message:
+      type: object
+      required: [id, eventId, senderId, recipientId, text, createdAt, readAt]
+      properties:
+        id: {type: integer}
+        eventId: {type: integer}
+        senderId: {type: integer}
+        recipientId: {type: integer}
+        text: {type: string}
+        createdAt: {type: string}
+        readAt: {type: ["string", "null"]}
+    Conversation:
+      type: object
+      required: [eventId, eventTitle, eventEmoji, otherUser, lastMessage, unreadCount, allowMessages]
+      properties:
+        eventId: {type: integer}
+        eventTitle: {type: string}
+        eventEmoji: {type: string}
+        otherUser: {$ref: "#/components/schemas/User"}
+        lastMessage: {$ref: "#/components/schemas/Message"}
+        unreadCount: {type: integer}
+        allowMessages: {type: boolean}
+    Inbox:
+      type: object
+      required: [conversations, unreadCount]
+      properties:
+        conversations: {type: array, items: {$ref: "#/components/schemas/Conversation"}}
+        unreadCount: {type: integer}

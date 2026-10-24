@@ -1,0 +1,1 @@
+- [Public map tile availability](map-tiles.md) — tile HTTP 200 can contain an API-key watermark rather than a usable map.

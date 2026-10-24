@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "PulseMap"
+description = "Map-first neighborhood activities for people in Istanbul. Discover, host and join local events with age and capacity guardrails, illustrated avatars and private event messaging."
+version = "1.0.0"
+id = "artifacts/pulsemap"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24970
+
+[services.development]
+run = "pnpm --filter @workspace/pulsemap run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pulsemap", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/pulsemap/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24970"
+BASE_PATH = "/"
